@@ -92,11 +92,11 @@ userSchema.methods.isValid = async function (password: string) {
   return bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToken = async function (): Promise<string> {
+userSchema.methods.generateAccessToken = async function () {
   return jwt.sign(
     { id: this._id, role: this.role },
     process.env.ACCESS_TOKEN_SECRET as string,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY },
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" },
   );
 };
 
@@ -104,6 +104,6 @@ userSchema.methods.generateRefreshToken = async function () {
   return jwt.sign(
     { id: this._id, role: this.role },
     process.env.REFRESH_TOKEN_SECRET as string,
-    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY },
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d" },
   );
 };
