@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, phoneNumber, role, society, flat } =
-      req.body;
+      req.body || {};
 
     if (!name || !email || !password || !phoneNumber || !role) {
       return res.status(400).json({
@@ -60,7 +60,7 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -113,8 +113,8 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        phoneNumber:user.phoneNumber,
-        role:user.role,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
         society: user.society,
         flat: user.flat,
         isVerified: user.isVerified,
@@ -128,3 +128,17 @@ export const login = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+  } catch (error) {
+    console.error("Error occured while loggin out", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+

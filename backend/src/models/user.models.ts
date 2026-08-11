@@ -3,10 +3,10 @@ import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 
 enum Role {
-  SECRETARY = "SECRETARY",
-  RESIDENT = "RESIDENT",
-  SECURITY = "SECURITY",
-  MAINTENANCE = "MAINTENANCE",
+  SECRETARY = "secretary",
+  RESIDENT = "resident",
+  SECURITY = "security",
+  MAINTENANCE = "maintenance",
 }
 
 interface User extends Document {
@@ -92,15 +92,15 @@ userSchema.methods.isPasswordValid = async function (password: string) {
   return bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToken =  function () {
+userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     { id: this._id, role: this.role },
     process.env.ACCESS_TOKEN_SECRET as string,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" }as SignOptions,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" } as SignOptions,
   );
 };
 
-userSchema.methods.generateRefreshToken =  function () {
+userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     { id: this._id, role: this.role },
     process.env.REFRESH_TOKEN_SECRET as string,
