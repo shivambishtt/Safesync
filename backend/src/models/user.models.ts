@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions } from "jsonwebtoken";
 
 enum Role {
   SECRETARY = "SECRETARY",
@@ -18,6 +18,8 @@ interface User extends Document {
   society: mongoose.Schema.Types.ObjectId;
   flat: mongoose.Schema.Types.ObjectId;
   isVerified: boolean;
+  generateAccessToken(): string;
+  generateRefreshToken(): string;
 }
 
 const userSchema = new mongoose.Schema<User>(
@@ -81,29 +83,29 @@ const userSchema = new mongoose.Schema<User>(
   },
 );
 
-export const UserModel = mongoose.model("User", userSchema);
-
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-userSchema.methods.isValid = async function (password: string) {
+userSchema.methods.isPasswordValid = async function (password: string) {
   return bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToken = async function () {
+userSchema.methods.generateAccessToken =  function () {
   return jwt.sign(
     { id: this._id, role: this.role },
     process.env.ACCESS_TOKEN_SECRET as string,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" },
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" }as SignOptions,
   );
 };
 
-userSchema.methods.generateRefreshToken = async function () {
+userSchema.methods.generateRefreshToken =  function () {
   return jwt.sign(
     { id: this._id, role: this.role },
     process.env.REFRESH_TOKEN_SECRET as string,
-    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d" },
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d" } as SignOptions,
   );
 };
+
+export const User = mongoose.model("User", userSchema);

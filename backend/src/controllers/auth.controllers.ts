@@ -1,0 +1,130 @@
+import { Request, Response } from "express";
+import { User } from "../models/user.models";
+import bcrypt from "bcrypt";
+
+export const register = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password, phoneNumber, role, society, flat } =
+      req.body;
+
+    if (!name || !email || !password || !phoneNumber || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all the required fields",
+      });
+    }
+
+    const userExists = await User.findOne({
+      $or: [{ email: email.toLowerCase().trim() }, { phoneNumber }],
+    });
+
+    if (userExists) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists in the database",
+      });
+    }
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phoneNumber,
+      role,
+      society,
+      flat,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+        society: user.society,
+        flat: user.flat,
+        isVerified: user.isVerified,
+      },
+    });
+  } catch (error) {
+    console.error("Register error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both email and password",
+      });
+    }
+
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password. Please try again",
+      });
+    }
+
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 3600000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phoneNumber:user.phoneNumber,
+        role:user.role,
+        society: user.society,
+        flat: user.flat,
+        isVerified: user.isVerified,
+      },
+    });
+  } catch (error) {
+    console.error("Error occurred while logging in:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
