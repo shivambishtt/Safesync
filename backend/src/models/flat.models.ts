@@ -4,6 +4,7 @@ enum FlatStatus {
   OCCUPIED = "OCCUPIED",
   VACANT = "VACANT",
   UNDER_MAINTENANCE = "UNDER_MAINTENANCE",
+  UNDER_CONSTRUCTION = "UNDER_CONSTRUCTION",
 }
 
 enum FlatType {
@@ -11,7 +12,6 @@ enum FlatType {
   TWO_BHK = "2BHK",
   THREE_BHK = "3BHK",
   FOUR_BHK = "4BHK",
-  OTHER = "OTHER",
 }
 
 interface Flat extends Document {
@@ -22,7 +22,6 @@ interface Flat extends Document {
   area?: number;
   society: mongoose.Schema.Types.ObjectId;
   status: FlatStatus;
-
   createdAt: Date;
   updatedAt: Date;
 }
@@ -89,7 +88,4 @@ flatSchema.index(
   },
 );
 
-export const Flat = mongoose.model<Flat>(
-  "Flat",
-  flatSchema,
-);
+export const Flat = mongoose.model<Flat>("Flat", flatSchema);
