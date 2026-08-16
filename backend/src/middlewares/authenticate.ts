@@ -24,12 +24,11 @@ export const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    const decoded = verifyAccessToken(token);
-    if (!decoded || typeof decoded === "string") {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid access token" });
-    }
+    const decoded = verifyAccessToken(token) as {
+      id: string;
+      role: string;
+    };
+    
     req.user = decoded;
     next();
   } catch (error) {
