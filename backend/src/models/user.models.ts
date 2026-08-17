@@ -13,6 +13,7 @@ interface User extends Document {
   name: string;
   email: string;
   password: string;
+  refreshToken: string;
   role: Role;
   phoneNumber: string;
   society: mongoose.Schema.Types.ObjectId;
@@ -42,6 +43,10 @@ const userSchema = new mongoose.Schema<User>(
       type: String,
       required: true,
       minlength: 6,
+    },
+    
+    refreshToken: {
+      type: String,
     },
 
     phoneNumber: {

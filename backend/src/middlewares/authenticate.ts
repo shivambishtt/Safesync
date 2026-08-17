@@ -7,7 +7,7 @@ export const verifyAccessToken = (token: string) => {
     : null;
 };
 
-const verifyRefreshToken = (token: string) => {
+export const verifyRefreshToken = (token: string) => {
   return token
     ? jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string)
     : null;
@@ -28,7 +28,6 @@ export const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
       id: string;
       role: string;
     };
-    
     req.user = decoded;
     next();
   } catch (error) {

@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { User } from "../models/user.models";
+import { verifyRefreshToken } from "../middlewares/authenticate";
 import bcrypt from "bcrypt";
+import { hashToken } from "../utils/token.utils";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -91,11 +93,14 @@ export const login = async (req: Request, res: Response) => {
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
+    user.refreshToken = hashToken(refreshToken);
+    await user.save();
+
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 3600000,
+      maxAge: 60 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
@@ -131,8 +136,25 @@ export const login = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+    const token = req.cookies?.refreshToken;
+
+    if (token) {
+      const decoded = verifyRefreshToken(token) as { id: string } | null;
+      if (decoded) {
+        await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+      }
+    }
+
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
 
     return res.status(200).json({
       success: true,
@@ -143,6 +165,60 @@ export const logout = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+};
+
+export const refresh_token = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies?.refreshToken;
+
+    if (!token) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Refresh Token is required" });
+    }
+
+    const decoded = verifyRefreshToken(token) as {
+      id: string;
+      role: string;
+    };
+
+    req.user = decoded;
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.refreshToken !== hashToken(token)) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token is invalid or has been revoked",
+      });
+    }
+
+    const accessToken = user.generateAccessToken();
+
+    res.cookie("accessToken", accessToken, {
+      sameSite: "strict",
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Access token refreshed successfully",
+    });
+  } catch (error) {
+    console.error("Refresh token error:", error);
+
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired refresh token",
     });
   }
 };
