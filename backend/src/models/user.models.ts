@@ -3,10 +3,10 @@ import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 
 enum Role {
-  SECRETARY = "secretary",
-  RESIDENT = "resident",
-  SECURITY = "security",
-  MAINTENANCE = "maintenance",
+  SECRETARY = "SECRETARY",
+  RESIDENT = "RESIDENT",
+  SECURITY = "SECURITY",
+  MAINTENANCE = "MAINTENANCE",
 }
 
 interface User extends Document {
