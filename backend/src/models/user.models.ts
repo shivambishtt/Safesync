@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 
-enum Role {
+export enum Role {
   SECRETARY = "SECRETARY",
   RESIDENT = "RESIDENT",
   SECURITY = "SECURITY",
@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema<User>(
       required: true,
       minlength: 6,
     },
-    
+
     refreshToken: {
       type: String,
     },

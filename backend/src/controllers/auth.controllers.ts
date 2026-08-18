@@ -139,7 +139,9 @@ export const logout = async (req: Request, res: Response) => {
     const token = req.cookies?.refreshToken;
 
     if (token) {
-      const decoded = verifyRefreshToken(token) as { id: string } | null;
+      const decoded = verifyRefreshToken(token) as {
+        id: string;
+      } | null;
       if (decoded) {
         await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
       }
@@ -158,7 +160,7 @@ export const logout = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Logged out successfully",
+      message: "User Logged out successfully",
     });
   } catch (error) {
     console.error("Error occured while loggin out", error);
@@ -209,21 +211,20 @@ export const refresh_token = async (req: Request, res: Response) => {
       sameSite: "strict",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 1000
+      maxAge: 60 * 60 * 1000,
     });
 
     res.cookie("refreshToken", newRefreshToken, {
       sameSite: "strict",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
       success: true,
       message: "Access token refreshed successfully",
     });
-
   } catch (error) {
     console.error("Refresh token error:", error);
 

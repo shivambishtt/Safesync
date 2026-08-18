@@ -2,8 +2,8 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
-import type { Application, Request, Response, NextFunction } from "express";
-import authRouter from "./routes/user.routes";
+import type { Application } from "express";
+import { authRouter, userRouter } from "./routes/user.routes";
 
 dotenv.config();
 
@@ -19,5 +19,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/api/auth/users/", authRouter);
+app.use("/api/users/", userRouter);
 
 export default app;

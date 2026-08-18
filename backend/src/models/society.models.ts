@@ -6,8 +6,8 @@ enum SocietyStatus {
 }
 
 interface Society extends Document {
-  societyName: string;
-  societyAdmin: mongoose.Schema.Types.ObjectId;
+  name: string;
+  admin: mongoose.Schema.Types.ObjectId;
   email?: string;
   address: {
     addressLine: string;
@@ -23,13 +23,13 @@ interface Society extends Document {
 
 const societySchema = new mongoose.Schema<Society>(
   {
-    societyName: {
+    name: {
       type: String,
       required: true,
       trim: true,
     },
 
-    societyAdmin: {
+    admin: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { Role } from "../models/user.models";
 import jwt from "jsonwebtoken";
 
 export const verifyAccessToken = (token: string) => {
@@ -20,14 +21,15 @@ export const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Access token is required",
+        message: "Authentication required. Please Log in",
       });
     }
 
     const decoded = verifyAccessToken(token) as {
       id: string;
-      role: string;
+      role: Role;
     };
+
     req.user = decoded;
     next();
   } catch (error) {
