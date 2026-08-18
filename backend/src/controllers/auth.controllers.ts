@@ -184,8 +184,6 @@ export const refresh_token = async (req: Request, res: Response) => {
       role: string;
     };
 
-    req.user = decoded;
-
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({
@@ -202,17 +200,30 @@ export const refresh_token = async (req: Request, res: Response) => {
     }
 
     const accessToken = user.generateAccessToken();
+    const newRefreshToken = user.generateRefreshToken();
+
+    user.refreshToken = hashToken(newRefreshToken);
+    await user.save();
 
     res.cookie("accessToken", accessToken, {
       sameSite: "strict",
       httpOnly: true,
-      maxAge: 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 1000
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      sameSite: "strict",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
     return res.status(200).json({
       success: true,
       message: "Access token refreshed successfully",
     });
+
   } catch (error) {
     console.error("Refresh token error:", error);
 
