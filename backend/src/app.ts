@@ -3,7 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import type { Application } from "express";
-import { authRouter, userRouter } from "./routes/user.routes";
+import { authRouter, societyRouter, userRouter } from "./routes/user.routes";
 
 dotenv.config();
 
@@ -20,5 +20,6 @@ app.use(cookieParser());
 
 app.use("/api/auth/users/", authRouter);
 app.use("/api/users/", userRouter);
+app.use("/api/society/", societyRouter);
 
 export default app;

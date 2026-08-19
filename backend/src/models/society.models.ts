@@ -1,13 +1,13 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-enum SocietyStatus {
+export enum SocietyStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
 }
 
 interface Society extends Document {
   name: string;
-  admin: mongoose.Schema.Types.ObjectId;
+  secretary: mongoose.Types.ObjectId;
   email?: string;
   address: {
     addressLine: string;
@@ -15,7 +15,7 @@ interface Society extends Document {
     state: string;
     pincode: string;
   };
-  totalFlats: number;
+  flats: number;
   status: SocietyStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -29,7 +29,7 @@ const societySchema = new mongoose.Schema<Society>(
       trim: true,
     },
 
-    admin: {
+    secretary: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
@@ -66,7 +66,7 @@ const societySchema = new mongoose.Schema<Society>(
       },
     },
 
-    totalFlats: {
+    flats: {
       type: Number,
       default: 0,
       min: 0,

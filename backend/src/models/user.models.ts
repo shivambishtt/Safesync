@@ -1,8 +1,9 @@
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 
 export enum Role {
+  SUPER_ADMIN = "SUPER_ADMIN",
   SECRETARY = "SECRETARY",
   RESIDENT = "RESIDENT",
   SECURITY = "SECURITY",
@@ -16,8 +17,8 @@ interface User extends Document {
   refreshToken: string;
   role: Role;
   phoneNumber: string;
-  society: mongoose.Schema.Types.ObjectId;
-  flat: mongoose.Schema.Types.ObjectId;
+  society?: mongoose.Types.ObjectId;
+  flat?: mongoose.Types.ObjectId;
   isVerified: boolean;
   generateAccessToken(): string;
   generateRefreshToken(): string;
@@ -59,23 +60,19 @@ const userSchema = new mongoose.Schema<User>(
     role: {
       type: String,
       enum: Object.values(Role),
-      required: true,
+      default: Role.RESIDENT,
     },
 
     society: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Society",
-      required: function (this: User) {
-        return this.role === Role.RESIDENT;
-      },
+      default: null,
     },
 
     flat: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Flat",
-      required: function (this: User) {
-        return this.role === Role.RESIDENT;
-      },
+      default: null,
     },
 
     isVerified: {

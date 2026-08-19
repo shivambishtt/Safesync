@@ -10,11 +10,14 @@ import {
   registerValidation,
   loginValidation,
 } from "../validations/user.validations";
+import { createSocietyValidation } from "../validations/society.validations";
 import { getData } from "../controllers/user.controllers";
 import { verifyJWT } from "../middlewares/authenticate";
+import { createSociety } from "../controllers/society.controllers";
 
 const authRouter = Router();
 const userRouter = Router();
+const societyRouter = Router();
 
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
@@ -23,4 +26,11 @@ authRouter.post("/refresh-token", refresh_token);
 
 userRouter.get("/get-data", verifyJWT, getData);
 
-export { authRouter, userRouter };
+societyRouter.post(
+  "/create-society",
+  validate(createSocietyValidation),
+  verifyJWT,
+  createSociety,
+);
+
+export { authRouter, userRouter, societyRouter };
