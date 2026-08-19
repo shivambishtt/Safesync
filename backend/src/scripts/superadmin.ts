@@ -23,6 +23,8 @@ const seedSuperAdmin = async () => {
       isVerified: true,
     });
 
+    console.log("Super admin created successfully", super_admin.name);
+
     process.exit(0);
   } catch (error) {
     console.error("Error seeding superadmin:", error);

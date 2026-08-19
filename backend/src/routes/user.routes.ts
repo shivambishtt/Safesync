@@ -14,10 +14,14 @@ import { createSocietyValidation } from "../validations/society.validations";
 import { getData } from "../controllers/user.controllers";
 import { verifyJWT } from "../middlewares/authenticate";
 import { createSociety } from "../controllers/society.controllers";
+import { getPendingSecretaries } from "../controllers/admin.controllers";
+import { authorize } from "../middlewares/authorize.middlewares";
+import { Role } from "../models/user.models";
 
 const authRouter = Router();
 const userRouter = Router();
 const societyRouter = Router();
+const adminRouter = Router();
 
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
@@ -33,4 +37,11 @@ societyRouter.post(
   createSociety,
 );
 
-export { authRouter, userRouter, societyRouter };
+adminRouter.get(
+  "/",
+  verifyJWT,
+  authorize(Role.SUPER_ADMIN),
+  getPendingSecretaries,
+);
+
+export { authRouter, userRouter, societyRouter, adminRouter };
