@@ -14,7 +14,10 @@ import { createSocietyValidation } from "../validations/society.validations";
 import { getData } from "../controllers/user.controllers";
 import { verifyJWT } from "../middlewares/authenticate";
 import { createSociety } from "../controllers/society.controllers";
-import { getPendingSecretaries } from "../controllers/admin.controllers";
+import {
+  approvePendingSecretary,
+  getPendingSecretaries,
+} from "../controllers/admin.controllers";
 import { authorize } from "../middlewares/authorize.middlewares";
 import { Role } from "../models/user.models";
 
@@ -38,10 +41,17 @@ societyRouter.post(
 );
 
 adminRouter.get(
-  "/",
+  "/pending-requests",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   getPendingSecretaries,
+);
+
+adminRouter.get(
+  "/approve/:id",
+  verifyJWT,
+  authorize(Role.SUPER_ADMIN),
+  approvePendingSecretary,
 );
 
 export { authRouter, userRouter, societyRouter, adminRouter };

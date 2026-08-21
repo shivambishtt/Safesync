@@ -26,6 +26,6 @@ app.use(cookieParser());
 app.use("/api/auth/users/", authRouter);
 app.use("/api/users/", userRouter);
 app.use("/api/society/", societyRouter);
-app.use("/api/requests/pending-requests", adminRouter);
+app.use("/api/requests/", adminRouter);
 
 export default app;

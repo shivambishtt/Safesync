@@ -7,7 +7,9 @@ export const getPendingSecretaries = async (req: Request, res: Response) => {
     const pendingRequests = await User.find({
       role: Role.SECRETARY,
       isVerified: false,
-    }).select("-password -refreshToken");
+    })
+      .select("-password -refreshToken")
+      .sort({ createdAt: -1 });
 
     if (!pendingRequests) {
       return res.status(400).json({
@@ -28,4 +30,51 @@ export const getPendingSecretaries = async (req: Request, res: Response) => {
       message: "Something went wrong",
     });
   }
+};
+
+export const approvePendingSecretary = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(401).json({
+      success: false,
+      message: "ID missing from params",
+    });
+  }
+
+  const user = await User.findById(id);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  if (user.role !== Role.SECRETARY) {
+    return res.status(400).json({
+      success: false,
+      message: "You are not an authorized person",
+    });
+  }
+
+  if (user.isVerified) {
+    return res.status(400).json({
+      success: false,
+      message: "User is already managing a society",
+    });
+  }
+
+  user.isVerified = true;
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Secretary approved successfully",
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      isVerified: user.isVerified,
+    },
+  });
 };
