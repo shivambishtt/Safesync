@@ -10,6 +10,12 @@ export enum Role {
   MAINTENANCE = "MAINTENANCE",
 }
 
+export enum ApplicationStatus {
+  PENDING = "PENDING",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+}
+
 interface User extends Document {
   name: string;
   email: string;
@@ -19,6 +25,7 @@ interface User extends Document {
   phoneNumber: string;
   society?: mongoose.Types.ObjectId;
   flat?: mongoose.Types.ObjectId;
+  applicationStatus: ApplicationStatus;
   isVerified: boolean;
   generateAccessToken(): string;
   generateRefreshToken(): string;
@@ -73,6 +80,12 @@ const userSchema = new mongoose.Schema<User>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Flat",
       default: null,
+    },
+
+    applicationStatus: {
+      type: String,
+      enum: Object.values(ApplicationStatus),
+      default: ApplicationStatus.PENDING,
     },
 
     isVerified: {

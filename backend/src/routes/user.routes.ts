@@ -16,6 +16,7 @@ import { verifyJWT } from "../middlewares/authenticate";
 import { createSociety } from "../controllers/society.controllers";
 import {
   approvePendingSecretary,
+  disapproveSecretary,
   getPendingSecretaries,
   revokeSecretary,
 } from "../controllers/admin.controllers";
@@ -60,6 +61,13 @@ adminRouter.get(
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   revokeSecretary,
+);
+
+adminRouter.post(
+  "/disapprove/:id",
+  verifyJWT,
+  authorize(Role.SUPER_ADMIN),
+  disapproveSecretary,
 );
 
 export { authRouter, userRouter, societyRouter, adminRouter };

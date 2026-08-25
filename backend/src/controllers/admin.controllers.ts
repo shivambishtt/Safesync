@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from "../models/user.models";
+import { ApplicationStatus, User } from "../models/user.models";
 import { Role } from "../models/user.models";
 
 export const getPendingSecretaries = async (req: Request, res: Response) => {
@@ -121,12 +121,56 @@ export const revokeSecretary = async (req: Request, res: Response) => {
       message: "Secretary's Role revoked successfully",
       user,
     });
-    
   } catch (error) {
     console.error("Revoke secretary error:", error);
     return res.status(500).json({
       success: false,
       message: "Something went wrong while revoking the secretary",
+    });
+  }
+};
+
+export const disapproveSecretary = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "ID missing from params",
+      });
+    }
+
+    const user = await User.findById(id).select("-refreshToken -password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.applicationStatus !== ApplicationStatus.PENDING) {
+      return res.status(401).json({
+        success: false,
+        message: "No pending application status found",
+      });
+    }
+
+    user.applicationStatus = ApplicationStatus.REJECTED;
+    user.isVerified = false;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Secretary's Application rejected",
+    });
+  } catch (error) {
+    console.error("Disapprove secretary error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while disapproving the secretary",
     });
   }
 };
