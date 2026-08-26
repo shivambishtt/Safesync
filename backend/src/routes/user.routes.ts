@@ -20,7 +20,7 @@ import {
   getPendingSecretaries,
   revokeSecretary,
 } from "../controllers/admin.controllers";
-import { authorize } from "../middlewares/authorize.middlewares";
+import { authorize } from "../middlewares/authorize";
 import { Role } from "../models/user.models";
 
 const authRouter = Router();
@@ -39,6 +39,7 @@ societyRouter.post(
   "/create-society",
   validate(createSocietyValidation),
   verifyJWT,
+  authorize(Role.SUPER_ADMIN),
   createSociety,
 );
 

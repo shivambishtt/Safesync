@@ -1,52 +1,34 @@
 import { Request, Response } from "express";
-import { Society } from "../models/society.models";
-import { Flat } from "../models/flat.models";
-import { User } from "../models/user.models";
+import { Society, SocietyStatus } from "../models/society.models";
+import { Role, User } from "../models/user.models";
 
 export const createSociety = async (req: Request, res: Response) => {
   try {
-    const { name, address, flats, status } = req.body;
-    const secretaryId = req.user?.id;
+    const { name, address, flats } = req.body;
 
-    if (!secretaryId) {
+    const id = req.user?.id;
+
+    if (!id) {
       return res.status(401).json({
         success: false,
-        message: "Authentication required. Please log in",
+        message: "Authentication is required",
       });
     }
+    const user = await User.findById(id).select("-refreshToken -password");
 
-    const existingUser = await User.findById(secretaryId);
-    if (!existingUser) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
 
-    if(!existingUser.isVerified){
-        return res.status(403).json({
-        success: false,
-        message: "Your account must be verified before you can create a society",
-      });
-    }
-
-    if (existingUser.society) {
-      return res.status(400).json({
-        success: false,
-        message: "You are already managing a society",
-      });
-    }
-
     const society = await Society.create({
       name,
-      secretary: secretaryId,
       address,
       flats,
-      status,
+      status: SocietyStatus.ACTIVE,
     });
-
-    existingUser.society = society._id;
-    await existingUser.save();
 
     return res.status(201).json({
       success: true,
