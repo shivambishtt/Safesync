@@ -13,7 +13,10 @@ import {
 import { createSocietyValidation } from "../validations/society.validations";
 import { getData } from "../controllers/user.controllers";
 import { verifyJWT } from "../middlewares/authenticate";
-import { createSociety } from "../controllers/society.controllers";
+import {
+  createSociety,
+  deleteSociety,
+} from "../controllers/society.controllers";
 import {
   approvePendingSecretary,
   disapproveSecretary,
@@ -43,6 +46,13 @@ societyRouter.post(
   createSociety,
 );
 
+societyRouter.post(
+  "/delete-society",
+  verifyJWT,
+  authorize(Role.SUPER_ADMIN),
+  deleteSociety,
+);
+
 adminRouter.get(
   "/pending-requests",
   verifyJWT,
@@ -70,5 +80,4 @@ adminRouter.post(
   authorize(Role.SUPER_ADMIN),
   disapproveSecretary,
 );
-
 export { authRouter, userRouter, societyRouter, adminRouter };
