@@ -16,6 +16,7 @@ import { verifyJWT } from "../middlewares/authenticate";
 import {
   createSociety,
   deleteSociety,
+  getSociety,
 } from "../controllers/society.controllers";
 import {
   approvePendingSecretary,
@@ -44,6 +45,13 @@ societyRouter.post(
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   createSociety,
+);
+
+societyRouter.get(
+  "/get-society",
+  verifyJWT,
+  authorize(Role.SUPER_ADMIN),
+  getSociety,
 );
 
 societyRouter.post(
