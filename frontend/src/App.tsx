@@ -1,11 +1,14 @@
-import React from "react";
+import "./styles/statamic.css";
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import Footer from "./components/Footer";
 
 function App() {
   return (
-    <div>
-      <h3 className="bg-blue-500 text-white p-4 font-semibold">
-        SafeSync - Apartment Management System
-      </h3>
+    <div className="App">
+      <Navbar />
+      <Hero />
+      <Footer />
     </div>
   );
 }
