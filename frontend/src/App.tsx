@@ -1,4 +1,4 @@
-import "./styles/statamic.css";
+import "./styles/mintlify.css";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Footer from "./components/Footer";
