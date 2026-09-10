@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   return (
@@ -17,11 +18,15 @@ export default function Navbar() {
 
         <div className="navbar-right">
           <div className="flex gap-2">
-            <Button className="btn-filled bg-gray-700">Signup</Button>
+            <Link to="/signup">
+              <Button className="btn-filled bg-gray-700">Signup</Button>
+            </Link>
 
-            <Button className="btn-filled bg-[#0c8c5e] text-black">
-              Login
-            </Button>
+            <Link to="/login">
+              <Button className="btn-filled bg-[#0c8c5e] text-black">
+                Login
+              </Button>
+            </Link>
 
             <div className="navbar-icon-circle" aria-label="Account">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
