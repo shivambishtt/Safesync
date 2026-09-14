@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerValidation } from "../../../backend/src/validations/user.validations";
@@ -27,6 +28,16 @@ const Role = {
   SECRETARY: "SECRETARY",
 } as const;
 
+interface FormData {
+  name: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
+  role: keyof typeof Role;
+  society?: string;
+  flat?: string;
+}
+
 export default function Signup() {
   const form = useForm({
     resolver: zodResolver(registerValidation),
@@ -42,8 +53,29 @@ export default function Signup() {
     },
   });
 
-  const onSubmit = (data: any) => {
-    console.log(data);
+  const handleSignup = async (data: FormData) => {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/auth/users/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        },
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("User registration successful", result);
+      } else {
+        const errorData = await response.json();
+        console.error("User registration failed", errorData);
+      }
+    } catch (error) {
+      console.error("Error occurred while registering user", error);
+    }
   };
 
   return (
@@ -80,8 +112,10 @@ export default function Signup() {
           "
         >
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              {/* Name */}
+            <form
+              onSubmit={form.handleSubmit(handleSignup)}
+              className="space-y-5"
+            >
               <FormField
                 control={form.control}
                 name="name"
