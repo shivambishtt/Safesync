@@ -40,7 +40,7 @@ authRouter.post("/refresh-token", refresh_token);
 userRouter.get("/get-data", verifyJWT, getData);
 
 societyRouter.post(
-  "/create-society",
+  "/create",
   validate(createSocietyValidation),
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
@@ -48,14 +48,14 @@ societyRouter.post(
 );
 
 societyRouter.get(
-  "/get-society",
+  "/get/:id",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   getSociety,
 );
 
-societyRouter.post(
-  "/delete-society",
+societyRouter.delete(
+  "/delete/:id",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   deleteSociety,
@@ -68,14 +68,14 @@ adminRouter.get(
   getPendingSecretaries,
 );
 
-adminRouter.get(
+adminRouter.post(
   "/approve/:id",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   approvePendingSecretary,
 );
 
-adminRouter.get(
+adminRouter.post(
   "/revoke/:id",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
