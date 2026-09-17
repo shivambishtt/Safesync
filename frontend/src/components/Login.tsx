@@ -12,21 +12,37 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
 import { loginValidation } from "../../../backend/src/validations/user.validations";
 
 export default function Login() {
   const form = useForm({
     resolver: zodResolver(loginValidation),
-
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = (values: any) => {
-    console.log(values);
+  const handleLogin = async (values: any) => {
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Login failed:", data.message);
+      }
+
+      console.log("Login successful", data);
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
   return (
@@ -54,7 +70,10 @@ export default function Login() {
 
         <div className="bg-white border border-[#f2f2f2] rounded-[16px] p-6 shadow-[0_2px_4px_rgba(0,0,0,0.05)]">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form
+              onSubmit={form.handleSubmit(handleLogin)}
+              className="space-y-5"
+            >
               <FormField
                 control={form.control}
                 name="email"
