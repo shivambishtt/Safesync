@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -15,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { loginValidation } from "../../../backend/src/validations/user.validations";
 
 export default function Login() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
     resolver: zodResolver(loginValidation),
     defaultValues: {
@@ -25,6 +27,7 @@ export default function Login() {
 
   const handleLogin = async (values: any) => {
     try {
+      setIsSubmitting(true);
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -38,10 +41,11 @@ export default function Login() {
       if (!response.ok) {
         console.error("Login failed:", data.message);
       }
-
-      console.log("Login successful", data);
     } catch (error) {
       console.error("Login error:", error);
+      setIsSubmitting(false);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -129,6 +133,11 @@ export default function Login() {
                 )}
               />
 
+              {isSubmitting && (
+                <div className="text-center text-[#0c8c5e] text-[14px] font-medium">
+                  Loading..
+                </div>
+              )}
               <Button
                 type="submit"
                 className="w-full h-10 mt-2 rounded-lg bg-[#08090a] text-white text-[14px] font-medium shadow-[0_2px_4px_rgba(0,0,0,0.03)] hover:bg-[#1a1b1c]"

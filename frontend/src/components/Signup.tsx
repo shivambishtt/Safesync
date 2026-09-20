@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerValidation } from "../../../backend/src/validations/user.validations";
@@ -38,6 +39,8 @@ interface FormData {
 }
 
 export default function Signup() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm({
     resolver: zodResolver(registerValidation),
 
@@ -54,6 +57,7 @@ export default function Signup() {
 
   const handleSignup = async (data: FormData) => {
     try {
+      setIsSubmitting(true);
       const response = await fetch(
         "http://localhost:3000/api/auth/users/register",
         {
@@ -64,6 +68,7 @@ export default function Signup() {
           body: JSON.stringify(data),
         },
       );
+      console.log(response,"response")
 
       if (response.ok) {
         const result = await response.json();
@@ -72,8 +77,11 @@ export default function Signup() {
         const errorData = await response.json();
         console.error("User registration failed", errorData);
       }
+      setIsSubmitting(false);
     } catch (error) {
       console.error("Error occurred while registering user", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -361,6 +369,11 @@ export default function Signup() {
                 )}
               />
 
+              {isSubmitting && (
+                <div className="text-center text-[#0c8c5e] text-[14px] font-medium">
+                  Loading..
+                </div>
+              )}
               <Button
                 type="submit"
                 className="
