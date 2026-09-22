@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
+  const { session } = useAuth();
+
   return (
     <header className="navbar">
       <div className="navbar-inner">
         <a className="navbar-logo" href="/">
-          <span className="navbar-logo-mark">S</span>
           SafeSync
         </a>
 
@@ -22,11 +24,13 @@ export default function Navbar() {
               <Button className="btn-filled bg-gray-700">Signup</Button>
             </Link>
 
-            <Link to="/login">
-              <Button className="btn-filled bg-[#0c8c5e] text-black">
-                Login
-              </Button>
-            </Link>
+            {!session.isAuthenticated && (
+              <Link to="/login">
+                <Button className="btn-filled bg-[#0c8c5e] text-black">
+                  Login
+                </Button>
+              </Link>
+            )}
 
             <div className="navbar-icon-circle" aria-label="Account">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

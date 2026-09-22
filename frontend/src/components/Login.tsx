@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 
 import {
   Form,
@@ -11,11 +12,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
+import { showToast } from "../lib/showToast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { loginValidation } from "../../../backend/src/validations/user.validations";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm({
     resolver: zodResolver(loginValidation),
@@ -28,19 +31,25 @@ export default function Login() {
   const handleLogin = async (values: any) => {
     try {
       setIsSubmitting(true);
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "http://localhost:3000/api/auth/users/login",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
         },
-        body: JSON.stringify(values),
-      });
+      );
 
       const data = await response.json();
-
       if (!response.ok) {
-        console.error("Login failed:", data.message);
+        showToast(data.message, "error");
+        return;
       }
+      showToast(data.message, "success");
+      navigate("/");
     } catch (error) {
       console.error("Login error:", error);
       setIsSubmitting(false);
@@ -133,17 +142,18 @@ export default function Login() {
                 )}
               />
 
-              {isSubmitting && (
+              {isSubmitting ? (
                 <div className="text-center text-[#0c8c5e] text-[14px] font-medium">
-                  Loading..
+                  <Button>Loading</Button>
                 </div>
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full h-10 mt-2 rounded-lg bg-[#08090a] text-white text-[14px] font-medium shadow-[0_2px_4px_rgba(0,0,0,0.03)] hover:bg-[#1a1b1c]"
+                >
+                  Log in
+                </Button>
               )}
-              <Button
-                type="submit"
-                className="w-full h-10 mt-2 rounded-lg bg-[#08090a] text-white text-[14px] font-medium shadow-[0_2px_4px_rgba(0,0,0,0.03)] hover:bg-[#1a1b1c]"
-              >
-                Log in
-              </Button>
             </form>
           </Form>
         </div>

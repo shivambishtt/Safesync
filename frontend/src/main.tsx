@@ -5,6 +5,8 @@ import App from "./App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Signup from "./components/Signup.tsx";
 import Login from "./components/Login.tsx";
+import { Toaster } from "./components/ui/toast.tsx";
+import { AuthProvider } from "./context/AuthContext.tsx";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +25,9 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <Toaster />
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>,
 );
