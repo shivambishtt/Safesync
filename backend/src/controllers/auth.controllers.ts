@@ -77,7 +77,7 @@ export const login = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Invalid email or password",
+        message: "User with this email does not exists",
       });
     }
 
