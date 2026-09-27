@@ -65,6 +65,7 @@ export const approvePendingSecretary = async (req: Request, res: Response) => {
   }
 
   user.isVerified = true;
+  user.applicationStatus = ApplicationStatus.ACCEPTED;
   await user.save();
 
   return res.status(200).json({
@@ -114,6 +115,7 @@ export const revokeSecretary = async (req: Request, res: Response) => {
     }
 
     user.isVerified = false;
+    user.applicationStatus = ApplicationStatus.PENDING;
     user.save();
 
     return res.status(200).json({
@@ -159,7 +161,6 @@ export const disapproveSecretary = async (req: Request, res: Response) => {
 
     user.applicationStatus = ApplicationStatus.REJECTED;
     user.isVerified = false;
-
     await user.save();
 
     return res.status(200).json({
