@@ -23,6 +23,7 @@ import {
   disapproveSecretary,
   getPendingSecretaries,
   revokeSecretary,
+  assignSecretary,
 } from "../controllers/admin.controllers";
 import { authorize } from "../middlewares/authorize";
 import { Role } from "../models/user.models";
@@ -88,4 +89,12 @@ adminRouter.post(
   authorize(Role.SUPER_ADMIN),
   disapproveSecretary,
 );
+
+adminRouter.post(
+  "/assign-secretary/:societyId",
+  verifyJWT,
+  authorize(Role.SUPER_ADMIN),
+  assignSecretary,
+);
+
 export { authRouter, userRouter, societyRouter, adminRouter };

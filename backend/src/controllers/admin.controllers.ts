@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { ApplicationStatus, User } from "../models/user.models";
 import { Role } from "../models/user.models";
+import mongoose from "mongoose";
+import { Society } from "../models/society.models";
 
 export const getPendingSecretaries = async (req: Request, res: Response) => {
   try {
@@ -172,6 +174,90 @@ export const disapproveSecretary = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: "Something went wrong while disapproving the secretary",
+    });
+  }
+};
+
+export const assignSecretary = async (req: Request, res: Response) => {
+  try {
+    const { societyId } = req.params;
+    const { secretaryId } = req.body;
+
+    if (!societyId) {
+      return res.status(400).json({
+        success: false,
+        message: "ID missing from params",
+      });
+    }
+
+    if (!secretaryId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized request" });
+    }
+
+    if (
+      typeof societyId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(societyId) 
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid society ID" });
+    }
+
+    if (
+      typeof secretaryId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(secretaryId)
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid secretary ID" });
+    }
+
+    const user = await User.findById(secretaryId).select("role");
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    if (user.role !== Role.SECRETARY) {
+      return res.status(400).json({
+        success: false,
+        message: "User is not a secretary",
+      });
+    }
+
+    const society = await Society.findOneAndUpdate(
+      { _id: societyId, secretary: null },
+      {
+        secretary: new mongoose.Types.ObjectId(secretaryId.societyId),
+      },
+      { new: true },
+    );
+
+    if (!society) {
+      const exists = await Society.exists({ _id: societyId });
+      return exists
+        ? res.status(409).json({
+            success: false,
+            message: "Secretary already exists for this society",
+          })
+        : res
+            .status(404)
+            .json({ success: false, message: "Society not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Secretary assigned successfully",
+      society,
+    });
+  } catch (error) {
+    console.error("Something went wrong while assigning secretary", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };

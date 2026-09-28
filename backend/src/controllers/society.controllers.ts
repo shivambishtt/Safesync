@@ -28,6 +28,7 @@ export const createSociety = async (req: Request, res: Response) => {
       address,
       flats,
       status: SocietyStatus.ACTIVE,
+      secretary: null,
     });
 
     return res.status(201).json({
@@ -47,7 +48,7 @@ export const createSociety = async (req: Request, res: Response) => {
 export const getSociety = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -68,7 +69,7 @@ export const getSociety = async (req: Request, res: Response) => {
     if (!society) {
       return res.status(404).json({
         success: false,
-        message: "Society not found",
+        message: "Society with this ID not found",
       });
     }
 
