@@ -7,7 +7,7 @@ export enum SocietyStatus {
 
 interface Society extends Document {
   name: string;
-  secretary: mongoose.Types.ObjectId;
+  secretary: mongoose.Types.ObjectId | null;
   email?: string;
   address: {
     addressLine: string;
@@ -32,6 +32,7 @@ const societySchema = new mongoose.Schema<Society>(
     secretary: {
       type: Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
 
     email: {

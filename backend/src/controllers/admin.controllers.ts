@@ -231,7 +231,7 @@ export const assignSecretary = async (req: Request, res: Response) => {
     const society = await Society.findOneAndUpdate(
       { _id: societyId, secretary: null },
       {
-        secretary: new mongoose.Types.ObjectId(secretaryId.societyId),
+        secretary: new mongoose.Types.ObjectId(secretaryId),
       },
       { new: true },
     );
