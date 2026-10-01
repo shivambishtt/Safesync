@@ -75,7 +75,7 @@ export const createFlat = async (req: Request, res: Response) => {
       block,
       floor,
       flatType,
-      society: society.name,
+      society: society._id,
       flatStatus,
       area,
       owner: null,
@@ -184,7 +184,6 @@ export const getAllFlats = async (req: Request, res: Response) => {
       count: flats.length,
       flats,
     });
-
   } catch (error) {
     console.error("Something went wrong while fetching all flats", error);
     return res.status(500).json({
