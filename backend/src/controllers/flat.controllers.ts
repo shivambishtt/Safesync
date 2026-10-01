@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Role } from "../models/user.models";
+import { Role, User } from "../models/user.models";
 import { Society } from "../models/society.models";
 import { Flat, FlatType, FlatStatus } from "../models/flat.models";
 import mongoose from "mongoose";
@@ -88,6 +88,204 @@ export const createFlat = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Something went wrong while creating flat", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getFlat = async (req: Request, res: Response) => {
+  try {
+    const { flatId } = req.params;
+    const user = req.user;
+
+    if (
+      !user ||
+      (user.role !== Role.SECRETARY && user.role !== Role.SUPER_ADMIN)
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "You are not authorized to view this flat",
+      });
+    }
+
+    if (
+      !flatId ||
+      typeof flatId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(flatId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid flat ID",
+      });
+    }
+
+    const flat = await Flat.findById(flatId);
+
+    if (!flat) {
+      return res.status(404).json({
+        success: false,
+        message: "Flat not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Flat details fetched successfully",
+      flat,
+    });
+  } catch (error) {
+    console.error("Something went wrong while fetching flat details", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getAllFlats = async (req: Request, res: Response) => {
+  try {
+    const { societyId } = req.params;
+    const user = req.user;
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Authentication is required" });
+    }
+    if (user.role !== Role.SECRETARY && user.role) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to view flats",
+      });
+    }
+
+    if (
+      !societyId ||
+      typeof societyId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(societyId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid society ID",
+      });
+    }
+
+    const flats = await Flat.find({
+      society: societyId,
+    }).sort({
+      createdAt: -1,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Flats fetched successfully",
+      count: flats.length,
+      flats,
+    });
+
+  } catch (error) {
+    console.error("Something went wrong while fetching all flats", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const addFlatOwner = async (req: Request, res: Response) => {
+  try {
+    const { flatId } = req.params;
+    const { ownerId } = req.body;
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication is required",
+      });
+    }
+
+    if (
+      !flatId ||
+      typeof flatId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(flatId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid flat ID",
+      });
+    }
+
+    if (
+      !ownerId ||
+      typeof ownerId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(ownerId)
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid owner ID",
+      });
+    }
+
+    const flat = await Flat.findById(flatId).populate("society", "secretary");
+    if (!flat) {
+      return res.status(404).json({
+        success: false,
+        message: "Flat not found",
+      });
+    }
+
+    if (
+      user.role === Role.SECRETARY &&
+      (flat.society as any)?.secretary?.toString() !== user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only manage flats in your own society",
+      });
+    }
+
+    const owner = await User.findById(ownerId).select("role");
+
+    if (!owner) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const updatedFlat = await Flat.findOneAndUpdate(
+      {
+        _id: flatId,
+        owner: null,
+        flatStatus: FlatStatus.VACANT,
+      },
+      {
+        owner: ownerId,
+        flatStatus: FlatStatus.OCCUPIED,
+      },
+      {
+        new: true,
+      },
+    );
+
+    if (!updatedFlat) {
+      return res.status(409).json({
+        success: false,
+        message: "Flat already has an owner",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Owner added to flat successfully",
+      updatedFlat,
+    });
+  } catch (error) {
+    console.error("Something went wrong while adding owner to flat", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",

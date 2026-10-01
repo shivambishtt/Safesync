@@ -27,7 +27,12 @@ import {
 } from "../controllers/admin.controllers";
 import { authorize } from "../middlewares/authorize";
 import { Role } from "../models/user.models";
-import { createFlat } from "../controllers/flat.controllers";
+import {
+  createFlat,
+  getFlat,
+  getAllFlats,
+  addFlatOwner,
+} from "../controllers/flat.controllers";
 
 const authRouter = Router();
 const userRouter = Router();
@@ -104,6 +109,22 @@ flatRouter.post(
   verifyJWT,
   authorize(Role.SECRETARY),
   createFlat,
+);
+
+flatRouter.get("/get/:flatId", verifyJWT, authorize(Role.SECRETARY), getFlat);
+
+flatRouter.get(
+  "/get-flats/:societyId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getAllFlats,
+);
+
+flatRouter.patch(
+  "/add-owner/:flatId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  addFlatOwner,
 );
 
 export { authRouter, userRouter, societyRouter, adminRouter, flatRouter };

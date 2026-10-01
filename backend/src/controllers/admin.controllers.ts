@@ -162,6 +162,7 @@ export const disapproveSecretary = async (req: Request, res: Response) => {
 
     user.applicationStatus = ApplicationStatus.REJECTED;
     user.isVerified = false;
+     user.role = Role.RESIDENT;
     await user.save();
 
     return res.status(200).json({
