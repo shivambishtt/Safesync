@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
-import { ApplicationStatus, User } from "../models/user.models";
-import { Role } from "../models/user.models";
-import mongoose from "mongoose";
 import { Society } from "../models/society.models";
+import { ApplicationStatus, User, Role } from "../models/user.models";
+import mongoose from "mongoose";
 
 export const getPendingSecretaries = async (req: Request, res: Response) => {
   try {
@@ -198,7 +197,7 @@ export const assignSecretary = async (req: Request, res: Response) => {
 
     if (
       typeof societyId !== "string" ||
-      !mongoose.Types.ObjectId.isValid(societyId) 
+      !mongoose.Types.ObjectId.isValid(societyId)
     ) {
       return res
         .status(400)

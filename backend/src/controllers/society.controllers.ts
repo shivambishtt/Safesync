@@ -14,15 +14,7 @@ export const createSociety = async (req: Request, res: Response) => {
         message: "Authentication is required",
       });
     }
-    const user = await User.findById(id).select("-refreshToken -password");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
+    
     const society = await Society.create({
       name,
       address,

@@ -8,6 +8,7 @@ import {
   authRouter,
   societyRouter,
   userRouter,
+  flatRouter,
 } from "./routes/user.routes";
 
 dotenv.config();
@@ -28,5 +29,6 @@ app.use("/api/auth/users/", authRouter);
 app.use("/api/users/", userRouter);
 app.use("/api/society/", societyRouter);
 app.use("/api/requests/", adminRouter);
+app.use("/api/flats/", flatRouter);
 
 export default app;

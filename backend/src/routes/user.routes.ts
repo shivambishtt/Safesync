@@ -27,11 +27,13 @@ import {
 } from "../controllers/admin.controllers";
 import { authorize } from "../middlewares/authorize";
 import { Role } from "../models/user.models";
+import { createFlat } from "../controllers/flat.controllers";
 
 const authRouter = Router();
 const userRouter = Router();
 const societyRouter = Router();
 const adminRouter = Router();
+const flatRouter = Router();
 
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
@@ -97,4 +99,11 @@ adminRouter.post(
   assignSecretary,
 );
 
-export { authRouter, userRouter, societyRouter, adminRouter };
+flatRouter.post(
+  "/create/:societyId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  createFlat,
+);
+
+export { authRouter, userRouter, societyRouter, adminRouter, flatRouter };
