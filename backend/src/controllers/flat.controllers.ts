@@ -193,6 +193,78 @@ export const getAllFlats = async (req: Request, res: Response) => {
   }
 };
 
+export const deleteFlat = async (req: Request, res: Response) => {
+  try {
+    const { flatId } = req.params;
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication is required",
+      });
+    }
+
+    if (!user.role || user.role !== Role.SECRETARY) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete flats",
+      });
+    }
+
+    if (
+      !flatId ||
+      typeof flatId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(flatId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid flat ID",
+      });
+    }
+
+    const flat = await Flat.findById(flatId).populate("society", "secretary");
+
+    if (!flat) {
+      return res.status(404).json({
+        success: false,
+        message: "Flat not found",
+      });
+    }
+
+    if (
+      user.role === Role.SECRETARY &&
+      (flat.society as any)?.secretary?.toString() !== user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only manage flats in your own society",
+      });
+    }
+
+    if (flat.owner) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete a flat that has an owner",
+      });
+    }
+
+    const deletedFlat = await Flat.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: "Flat deleted successfully",
+      deletedFlat,
+    });
+  } catch (error) {
+    console.error("Something went wrong while deleting flat", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export const addFlatOwner = async (req: Request, res: Response) => {
   try {
     const { flatId } = req.params;
