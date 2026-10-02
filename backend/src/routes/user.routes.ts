@@ -32,6 +32,7 @@ import {
   getFlat,
   getAllFlats,
   addFlatOwner,
+  deleteFlat,
 } from "../controllers/flat.controllers";
 
 const authRouter = Router();
@@ -118,6 +119,13 @@ flatRouter.get(
   verifyJWT,
   authorize(Role.SECRETARY),
   getAllFlats,
+);
+
+flatRouter.post(
+  "/delete/:flatId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  deleteFlat,
 );
 
 flatRouter.patch(
