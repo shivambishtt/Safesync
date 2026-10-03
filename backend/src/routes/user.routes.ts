@@ -33,6 +33,8 @@ import {
   getAllFlats,
   addFlatOwner,
   deleteFlat,
+  removeFlatOwner,
+  updateFlatOwner,
 } from "../controllers/flat.controllers";
 
 const authRouter = Router();
@@ -134,5 +136,19 @@ flatRouter.patch(
   authorize(Role.SECRETARY),
   addFlatOwner,
 );
+
+flatRouter.patch(
+  "/remove-owner/:flatId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  removeFlatOwner,
+);
+
+flatRouter.patch(
+  "/update-owner/:flatId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  updateFlatOwner
+)
 
 export { authRouter, userRouter, societyRouter, adminRouter, flatRouter };

@@ -17,6 +17,7 @@ export enum FlatType {
 interface Flat extends Document {
   flatNumber: string;
   owner: mongoose.Types.ObjectId | null;
+  resident: mongoose.Types.ObjectId | null;
   block: string;
   floor: number;
   flatType: FlatType;
@@ -37,6 +38,12 @@ const flatSchema = new mongoose.Schema<Flat>(
     },
 
     owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    resident: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
