@@ -144,6 +144,81 @@ export const getFlat = async (req: Request, res: Response) => {
   }
 };
 
+export const getFlatByNumber = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const { societyId } = req.params;
+    const { flatNumber } = req.query
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication is required",
+      });
+    }
+
+    if (user.role !== Role.SECRETARY) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+
+    if (
+      !societyId ||
+      typeof societyId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(societyId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid society Id",
+      });
+    }
+
+    if (!flatNumber || typeof flatNumber !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid flat number",
+      });
+    }
+
+    const society = await Society.findById(societyId).select("secretary");
+
+    if (!society) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Society not found" });
+    }
+
+    if (society.secretary?.toString() !== user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only search flats in your own society",
+      });
+    }
+
+    const flat = await Flat.findOne({
+      society: societyId,
+      flatNumber,
+    });
+
+    if (!flat) {
+      return res.status(404).json({
+        success: false,
+        message: "Flat not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Flat details fetched successfully",
+      flat,
+    });
+  } catch (error) {
+    console.error("Something went wrong while searching flat by number", error);
+  }
+};
+
 export const getAllFlats = async (req: Request, res: Response) => {
   try {
     const { societyId } = req.params;
@@ -361,5 +436,225 @@ export const addFlatOwner = async (req: Request, res: Response) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+export const removeFlatOwner = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+  try {
+    const { flatId } = req.params;
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication is required",
+      });
+    }
+
+    if (user.role !== Role.SECRETARY) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+
+    if (
+      !flatId ||
+      typeof flatId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(flatId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid flat ID",
+      });
+    }
+
+    const flat = await Flat.findById(flatId).populate("society");
+    if (!flat) {
+      return res.status(404).json({
+        success: false,
+        message: "Flat not found",
+      });
+    }
+
+    if ((flat.society as any)?.secretary?.toString() !== user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only manage flats in your own society",
+      });
+    }
+
+    if (!flat.owner) {
+      return res.status(400).json({
+        success: false,
+        message: "Flat owner does not exists",
+      });
+    }
+
+    const ownerId = flat.owner;
+    session.startTransaction();
+
+    const updatedFlat = await Flat.findByIdAndUpdate(
+      flat._id,
+      {
+        flatStatus: FlatStatus.VACANT,
+        owner: null,
+        resident: null,
+      },
+      {
+        new: true,
+        session,
+      },
+    );
+
+    await User.findByIdAndUpdate(
+      ownerId,
+      {
+        flat: null,
+      },
+      { new: true, session },
+    );
+
+    await session.commitTransaction();
+
+    return res.status(200).json({
+      success: true,
+      message: "Flat owner removed successfully",
+      updatedFlat,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Something went wrong while removing owner from flat", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+export const updateFlatOwner = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+  try {
+    const user = req.user;
+    const { flatId } = req.params;
+    const { newOwnerId } = req.body;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication is required",
+      });
+    }
+
+    if (user.role !== Role.SECRETARY) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+
+    if (
+      !flatId ||
+      typeof flatId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(flatId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid flat ID",
+      });
+    }
+
+    if (
+      !newOwnerId ||
+      typeof newOwnerId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(newOwnerId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid new owner ID",
+      });
+    }
+
+    const flat = await Flat.findById(flatId).populate("society");
+    if (!flat) {
+      return res.status(404).json({
+        success: false,
+        message: "Flat not found",
+      });
+    }
+
+    if ((flat.society as any)?.secretary?.toString() !== user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only manage flats in your own society",
+      });
+    }
+
+    if (!flat.owner) {
+      return res.status(400).json({
+        success: false,
+        message: "This flat has no current owner to update",
+      });
+    }
+
+    const oldOwnerId = flat.owner.toString();
+
+    if (newOwnerId === oldOwnerId) {
+      return res.status(409).json({
+        success: false,
+        message: "This resident is already the owner of this flat",
+      });
+    }
+
+    const newOwner = await User.findById(newOwnerId);
+    if (!newOwner) {
+      return res.status(404).json({
+        success: false,
+        message: "User does not exist",
+      });
+    }
+
+    if (newOwner.flat) {
+      return res.status(409).json({
+        success: false,
+        message: "This resident is already assigned to a flat",
+      });
+    }
+
+    session.startTransaction();
+
+    const updatedFlat = await Flat.findByIdAndUpdate(
+      flat._id,
+      { owner: newOwner._id },
+      { new: true, session },
+    );
+
+    await User.findByIdAndUpdate(oldOwnerId, { flat: null }, { session });
+
+    await User.findByIdAndUpdate(
+      newOwner._id,
+      { flat: updatedFlat?._id },
+      { session },
+    );
+
+    await session.commitTransaction();
+
+    return res.status(200).json({
+      success: true,
+      message: "Flat owner changed successfully",
+      flat: updatedFlat,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Something went wrong while updating owner from flat", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  } finally {
+    await session.endSession();
   }
 };
