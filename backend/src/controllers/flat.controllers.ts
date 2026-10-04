@@ -144,6 +144,81 @@ export const getFlat = async (req: Request, res: Response) => {
   }
 };
 
+export const getFlatByNumber = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const { societyId } = req.params;
+    const { flatNumber } = req.query
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication is required",
+      });
+    }
+
+    if (user.role !== Role.SECRETARY) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+
+    if (
+      !societyId ||
+      typeof societyId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(societyId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid society Id",
+      });
+    }
+
+    if (!flatNumber || typeof flatNumber !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid flat number",
+      });
+    }
+
+    const society = await Society.findById(societyId).select("secretary");
+
+    if (!society) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Society not found" });
+    }
+
+    if (society.secretary?.toString() !== user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only search flats in your own society",
+      });
+    }
+
+    const flat = await Flat.findOne({
+      society: societyId,
+      flatNumber,
+    });
+
+    if (!flat) {
+      return res.status(404).json({
+        success: false,
+        message: "Flat not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Flat details fetched successfully",
+      flat,
+    });
+  } catch (error) {
+    console.error("Something went wrong while searching flat by number", error);
+  }
+};
+
 export const getAllFlats = async (req: Request, res: Response) => {
   try {
     const { societyId } = req.params;

@@ -30,6 +30,7 @@ import { Role } from "../models/user.models";
 import {
   createFlat,
   getFlat,
+  getFlatByNumber,
   getAllFlats,
   addFlatOwner,
   deleteFlat,
@@ -108,47 +109,59 @@ adminRouter.post(
 );
 
 flatRouter.post(
-  "/create/:societyId",
+  "/societies/:societyId/flats",
   verifyJWT,
   authorize(Role.SECRETARY),
   createFlat,
 );
 
-flatRouter.get("/get/:flatId", verifyJWT, authorize(Role.SECRETARY), getFlat);
-
 flatRouter.get(
-  "/get-flats/:societyId",
+  "/societies/:societyId/flats",
   verifyJWT,
-  authorize(Role.SECRETARY),
+  authorize(Role.SECRETARY, Role.SUPER_ADMIN),
   getAllFlats,
 );
 
-flatRouter.post(
-  "/delete/:flatId",
+flatRouter.get(
+  "/societies/:societyId/flats/search",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getFlatByNumber,
+);
+
+flatRouter.get(
+  "/flats/:flatId",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SUPER_ADMIN),
+  getFlat,
+);
+
+flatRouter.delete(
+  "/flats/:flatId",
   verifyJWT,
   authorize(Role.SECRETARY),
   deleteFlat,
 );
 
-flatRouter.patch(
-  "/add-owner/:flatId",
+flatRouter.post(
+  "/flats/:flatId/owner",
   verifyJWT,
   authorize(Role.SECRETARY),
   addFlatOwner,
 );
 
 flatRouter.patch(
-  "/remove-owner/:flatId",
+  "/flats/:flatId/owner",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  updateFlatOwner,
+);
+
+flatRouter.delete(
+  "/flats/:flatId/owner",
   verifyJWT,
   authorize(Role.SECRETARY),
   removeFlatOwner,
 );
-
-flatRouter.patch(
-  "/update-owner/:flatId",
-  verifyJWT,
-  authorize(Role.SECRETARY),
-  updateFlatOwner
-)
 
 export { authRouter, userRouter, societyRouter, adminRouter, flatRouter };
