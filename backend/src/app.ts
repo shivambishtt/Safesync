@@ -26,9 +26,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/api/auth/users/", authRouter);
-app.use("/api/users/", userRouter);
-app.use("/api/society/", societyRouter);
-app.use("/api/requests/", adminRouter);
-app.use("/api/flats/", flatRouter);
+app.use("/api/v1/", userRouter);
+app.use("/api/v1/", societyRouter);
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/", flatRouter);
 
 export default app;

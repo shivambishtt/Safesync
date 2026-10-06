@@ -30,7 +30,6 @@ import { Role } from "../models/user.models";
 import {
   createFlat,
   getFlat,
-  getFlatByNumber,
   getAllFlats,
   addFlatOwner,
   deleteFlat,
@@ -49,63 +48,63 @@ authRouter.post("/login", validate(loginValidation), login);
 authRouter.post("/logout", logout);
 authRouter.post("/refresh-token", refresh_token);
 
-userRouter.get("/get-data", verifyJWT, getData);
+userRouter.get("/user", verifyJWT, getData);
 
 societyRouter.post(
-  "/create",
-  validate(createSocietyValidation),
+  "/societies",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
+  validate(createSocietyValidation),
   createSociety,
 );
 
 societyRouter.get(
-  "/get/:id",
+  "/societies/:societyId",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   getSociety,
 );
 
 societyRouter.delete(
-  "/delete/:id",
+  "/societies/:societyId",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   deleteSociety,
 );
 
 adminRouter.get(
-  "/pending-requests",
+  "secretary-applications/pending",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   getPendingSecretaries,
 );
 
-adminRouter.post(
-  "/approve/:id",
+adminRouter.patch(
+  "/secretary-applications/:userId/approve",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   approvePendingSecretary,
 );
 
-adminRouter.post(
-  "/revoke/:id",
+adminRouter.patch(
+  "/societies/:societyId/secretary/assign",
+  verifyJWT,
+  authorize(Role.SUPER_ADMIN),
+  assignSecretary,
+);
+
+adminRouter.patch(
+  "/societies/:societyId/secretary/revoke",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   revokeSecretary,
 );
 
-adminRouter.post(
-  "/disapprove/:id",
+adminRouter.patch(
+  "/societies/:societyId/secretary/disapprove",
   verifyJWT,
   authorize(Role.SUPER_ADMIN),
   disapproveSecretary,
-);
-
-adminRouter.post(
-  "/assign-secretary/:societyId",
-  verifyJWT,
-  authorize(Role.SUPER_ADMIN),
-  assignSecretary,
 );
 
 flatRouter.post(
@@ -120,13 +119,6 @@ flatRouter.get(
   verifyJWT,
   authorize(Role.SECRETARY, Role.SUPER_ADMIN),
   getAllFlats,
-);
-
-flatRouter.get(
-  "/societies/:societyId/flats/search",
-  verifyJWT,
-  authorize(Role.SECRETARY),
-  getFlatByNumber,
 );
 
 flatRouter.get(

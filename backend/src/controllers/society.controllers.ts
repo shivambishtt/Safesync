@@ -14,7 +14,6 @@ export const createSociety = async (req: Request, res: Response) => {
         message: "Authentication is required",
       });
     }
-    
     const society = await Society.create({
       name,
       address,
@@ -39,9 +38,9 @@ export const createSociety = async (req: Request, res: Response) => {
 
 export const getSociety = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { societyId } = req.params;
 
-    if (!id) {
+    if (!societyId) {
       return res.status(400).json({
         success: false,
         message: "ID missing from params",
@@ -56,7 +55,7 @@ export const getSociety = async (req: Request, res: Response) => {
       });
     }
 
-    const society = await Society.findById(id);
+    const society = await Society.findById(societyId);
 
     if (!society) {
       return res.status(404).json({
@@ -81,16 +80,16 @@ export const getSociety = async (req: Request, res: Response) => {
 
 export const deleteSociety = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { societyId } = req.params;
 
-    if (!id) {
+    if (!societyId) {
       return res.status(400).json({
         success: false,
         message: "ID missing from params",
       });
     }
 
-    const society = await Society.findById(id);
+    const society = await Society.findById(societyId);
 
     if (!society) {
       return res.status(404).json({
@@ -106,11 +105,9 @@ export const deleteSociety = async (req: Request, res: Response) => {
       });
     }
 
-    await Society.findByIdAndDelete({
-      _id: id,
-    });
+    await Society.findByIdAndDelete(societyId);
 
-    await User.findByIdAndUpdate({ society: id }, { $set: { society: null } });
+    await User.findByIdAndUpdate(societyId, { $set: { society: null } });
 
     return res.status(200).json({
       success: true,

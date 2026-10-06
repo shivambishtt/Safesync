@@ -3,6 +3,7 @@ import { Role, User } from "../models/user.models";
 import { Society } from "../models/society.models";
 import { Flat, FlatType, FlatStatus } from "../models/flat.models";
 import mongoose from "mongoose";
+import { getAllFlatsQuerySchema } from "../validations/querySchema.validations";
 
 export const createFlat = async (req: Request, res: Response) => {
   try {
@@ -144,81 +145,6 @@ export const getFlat = async (req: Request, res: Response) => {
   }
 };
 
-export const getFlatByNumber = async (req: Request, res: Response) => {
-  try {
-    const user = req.user;
-    const { societyId } = req.params;
-    const { flatNumber } = req.query
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication is required",
-      });
-    }
-
-    if (user.role !== Role.SECRETARY) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not authorized to perform this action",
-      });
-    }
-
-    if (
-      !societyId ||
-      typeof societyId !== "string" ||
-      !mongoose.Types.ObjectId.isValid(societyId)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid society Id",
-      });
-    }
-
-    if (!flatNumber || typeof flatNumber !== "string") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid flat number",
-      });
-    }
-
-    const society = await Society.findById(societyId).select("secretary");
-
-    if (!society) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Society not found" });
-    }
-
-    if (society.secretary?.toString() !== user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only search flats in your own society",
-      });
-    }
-
-    const flat = await Flat.findOne({
-      society: societyId,
-      flatNumber,
-    });
-
-    if (!flat) {
-      return res.status(404).json({
-        success: false,
-        message: "Flat not found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Flat details fetched successfully",
-      flat,
-    });
-  } catch (error) {
-    console.error("Something went wrong while searching flat by number", error);
-  }
-};
-
 export const getAllFlats = async (req: Request, res: Response) => {
   try {
     const { societyId } = req.params;
@@ -229,7 +155,8 @@ export const getAllFlats = async (req: Request, res: Response) => {
         .status(401)
         .json({ success: false, message: "Authentication is required" });
     }
-    if (user.role !== Role.SECRETARY && user.role) {
+
+    if (user.role !== Role.SECRETARY && user.role !== Role.SUPER_ADMIN) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to view flats",
@@ -247,11 +174,58 @@ export const getAllFlats = async (req: Request, res: Response) => {
       });
     }
 
-    const flats = await Flat.find({
-      society: societyId,
-    }).sort({
+    const society = await Society.findById(societyId).select("secretary");
+
+    if (!society) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Society not found" });
+    }
+
+    const parsedSchema = getAllFlatsQuerySchema.safeParse(req.query);
+
+    if (!parsedSchema.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid query parameters",
+        errors: parsedSchema.error.flatten().fieldErrors,
+      });
+    }
+
+    const { flatNumber, block, floor, flatStatus, area } = parsedSchema.data;
+
+    const filter: any = { society: societyId };
+
+    if (flatNumber && typeof flatNumber === "string") {
+      filter.flatNumber = flatNumber;
+    }
+
+    if (block && typeof block === "string") {
+      filter.block = block;
+    }
+
+    if (floor && typeof floor === "number") {
+      filter.floor = Number(floor);
+    }
+
+    if (flatStatus && typeof flatStatus === "string") {
+      filter.flatStatus = flatStatus;
+    }
+
+    if (area && typeof area === "number") {
+      filter.area = Number(area);
+    }
+
+    const flats = await Flat.find(filter).sort({
       createdAt: -1,
     });
+
+    if (flats.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Flat not found",
+      });
+    }
 
     return res.status(200).json({
       success: true,

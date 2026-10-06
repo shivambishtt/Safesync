@@ -2,20 +2,40 @@ import { Request, Response } from "express";
 import { Society } from "../models/society.models";
 import { ApplicationStatus, User, Role } from "../models/user.models";
 import mongoose from "mongoose";
+import { getPendingSecretariesQuerySchema } from "../validations/querySchema.validations";
 
 export const getPendingSecretaries = async (req: Request, res: Response) => {
   try {
-    const pendingRequests = await User.find({
+    const parsedSchema = getPendingSecretariesQuerySchema.safeParse(req.query);
+
+    if (!parsedSchema.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid query parameters",
+        errors: parsedSchema.error.flatten().fieldErrors,
+      });
+    }
+
+    const { applicationStatus } = parsedSchema.data;
+
+    const filter: any = {
       role: Role.SECRETARY,
       isVerified: false,
-    })
+      applicationStatus: applicationStatus && ApplicationStatus.PENDING,
+    };
+
+    if (applicationStatus) {
+      filter.applicationStatus = applicationStatus;
+    }
+
+    const pendingRequests = await User.find(filter)
       .select("-password -refreshToken")
       .sort({ createdAt: -1 });
 
-    if (!pendingRequests) {
-      return res.status(400).json({
+    if (!pendingRequests || pendingRequests.length === 0) {
+      return res.status(200).json({
         success: false,
-        message: "No pending requests for secretary's role",
+        message: "No pending requests for secretary role",
       });
     }
 
@@ -34,16 +54,16 @@ export const getPendingSecretaries = async (req: Request, res: Response) => {
 };
 
 export const approvePendingSecretary = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const { userId } = req.params;
 
-  if (!id) {
+  if (!userId) {
     return res.status(401).json({
       success: false,
       message: "ID missing from params",
     });
   }
 
-  const user = await User.findById(id);
+  const user = await User.findById(userId);
   if (!user) {
     return res.status(404).json({
       success: false,
@@ -162,7 +182,7 @@ export const disapproveSecretary = async (req: Request, res: Response) => {
 
     user.applicationStatus = ApplicationStatus.REJECTED;
     user.isVerified = false;
-     user.role = Role.RESIDENT;
+    user.role = Role.RESIDENT;
     await user.save();
 
     return res.status(200).json({
