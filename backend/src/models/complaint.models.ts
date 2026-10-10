@@ -91,11 +91,11 @@ const complaintSchema = new mongoose.Schema<IComplaint>(
     },
     estimatedClosureTime: {
       type: Date,
-      required: true,
+      default: null,
     },
     resolvedAt: {
       type: Date,
-      required: true,
+      default: null,
     },
   },
   {

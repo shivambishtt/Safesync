@@ -9,6 +9,7 @@ import {
   societyRouter,
   userRouter,
   flatRouter,
+  complaintRouter,
 } from "./routes/user.routes";
 
 dotenv.config();
@@ -30,5 +31,6 @@ app.use("/api/v1/", userRouter);
 app.use("/api/v1/", societyRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/", flatRouter);
+app.use("/api/v1/", complaintRouter);
 
 export default app;

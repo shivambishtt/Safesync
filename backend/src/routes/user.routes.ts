@@ -36,12 +36,19 @@ import {
   removeFlatOwner,
   updateFlatOwner,
 } from "../controllers/flat.controllers";
+import {
+  registerComplaint,
+  getComplaint,
+  getAllComplaints,
+  getComplaintByFilter,
+} from "../controllers/complaint.controllers";
 
 const authRouter = Router();
 const userRouter = Router();
 const societyRouter = Router();
 const adminRouter = Router();
 const flatRouter = Router();
+const complaintRouter = Router();
 
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
@@ -156,4 +163,39 @@ flatRouter.delete(
   removeFlatOwner,
 );
 
-export { authRouter, userRouter, societyRouter, adminRouter, flatRouter };
+complaintRouter.post(
+  "/societies/complaints/:flatId",
+  verifyJWT,
+  authorize(Role.RESIDENT, Role.SECRETARY),
+  registerComplaint,
+);
+
+complaintRouter.get(
+  "/complaints/:complaintId",
+  verifyJWT,
+  authorize(Role.RESIDENT, Role.SECRETARY),
+  getComplaint,
+);
+
+complaintRouter.get(
+  "/societies/complaints/:societyId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getAllComplaints,
+);
+
+complaintRouter.get(
+  "/societies/complaints/filter/:societyId/",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getComplaintByFilter,
+);
+
+export {
+  authRouter,
+  userRouter,
+  societyRouter,
+  adminRouter,
+  flatRouter,
+  complaintRouter,
+};

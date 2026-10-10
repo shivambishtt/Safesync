@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { FlatStatus } from "../models/flat.models";
 import { ApplicationStatus } from "../models/user.models";
+import { ComplaintStatus } from "../models/complaint.models";
 
 export const getAllFlatsQuerySchema = z
   .object({
@@ -15,5 +16,11 @@ export const getAllFlatsQuerySchema = z
 export const getPendingSecretariesQuerySchema = z
   .object({
     applicationStatus: z.nativeEnum(ApplicationStatus).optional(),
+  })
+  .strict();
+
+export const getComplaintByFilterQuerySchema = z
+  .object({
+    status: z.nativeEnum(ComplaintStatus).optional(),
   })
   .strict();
