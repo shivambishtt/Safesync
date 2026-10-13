@@ -41,6 +41,7 @@ import {
   getComplaint,
   getAllComplaints,
   getComplaintByFilter,
+  assignStaff,
 } from "../controllers/complaint.controllers";
 
 const authRouter = Router();
@@ -185,12 +186,18 @@ complaintRouter.get(
 );
 
 complaintRouter.get(
-  "/societies/complaints/filter/:societyId/",
+  "/societies/complaints/filter/:societyId",
   verifyJWT,
   authorize(Role.SECRETARY),
   getComplaintByFilter,
 );
 
+complaintRouter.post(
+  "/complaints/:complaintId/assign",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  assignStaff,
+);
 export {
   authRouter,
   userRouter,

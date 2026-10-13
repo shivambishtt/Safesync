@@ -5,11 +5,11 @@ import {
   ComplaintPriority,
   ComplaintStatus,
 } from "../models/complaint.models";
+import { Role, User } from "../models/user.models";
 import { Flat } from "../models/flat.models";
 import mongoose from "mongoose";
 import { Society } from "../models/society.models";
 import { getComplaintByFilterQuerySchema } from "../validations/querySchema.validations";
-import { success } from "zod";
 
 export const registerComplaint = async (req: Request, res: Response) => {
   try {
@@ -309,5 +309,118 @@ export const getComplaintByFilter = async (req: Request, res: Response) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+export const assignStaff = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+  const date = new Date();
+  try {
+    const { complaintId } = req.params;
+    const user = req.user;
+
+    if (
+      typeof complaintId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(complaintId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Complaint ID",
+      });
+    }
+
+    const complaint = await Complaint.findById(complaintId)
+      .select("society status")
+      .populate({
+        path: "society",
+        select: "secretary",
+      });
+
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        message: "Complaint not found",
+      });
+    }
+
+    if (
+      user?.role === Role.SECRETARY &&
+      (complaint.society as any)?.secretary?.toString() !== user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only manage complaints in your own society",
+      });
+    }
+
+    if (complaint.status !== ComplaintStatus.OPEN) {
+      return res.status(409).json({
+        success: false,
+        message: "Complaint is not open for assignment",
+      });
+    }
+
+    session.startTransaction();
+
+    const staff = await User.findOneAndUpdate(
+      {
+        role: Role.MAINTENANCE,
+        isAvailable: true,
+      },
+      {
+        isAvailable: false,
+      },
+      { new: true, session },
+    );
+
+    if (!staff) {
+      await session.abortTransaction();
+      return res.status(409).json({
+        success: false,
+        message: "No staff available for this complaint at the moment",
+      });
+    }
+
+    const updatedComplaint = await Complaint.findOneAndUpdate(
+      {
+        _id: complaintId,
+        status: ComplaintStatus.OPEN,
+      },
+      {
+        assignedTo: staff._id,
+        assignedBy: user?._id,
+        status: ComplaintStatus.ASSIGNED,
+        estimatedClosureTime: date.setDate(date.getDate() + 2),
+      },
+      { new: true, session },
+    );
+
+    if (!updatedComplaint) {
+      await session.abortTransaction();
+      return res.status(409).json({
+        success: false,
+        message: "Complaint was already assigned",
+      });
+    }
+
+    await session.commitTransaction();
+
+    return res.status(201).json({
+      success: true,
+      message: "Staff assigned successfully",
+      updatedComplaint,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error(
+      "Error occured while assigning staff to the complaint",
+      error,
+    );
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  } finally {
+    await session.endSession();
   }
 };

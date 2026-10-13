@@ -1,12 +1,14 @@
 import mongoose, { Document } from "mongoose";
 
 export enum ComplaintStatus {
+  OPEN = "OPEN",
   PENDING = "PENDING",
   ASSIGNED = "ASSIGNED",
   IN_PROGRESS = "IN_PROGRESS",
   RESOLVED = "RESOLVED",
   CLOSED = "CLOSED",
 }
+
 export enum ComplaintCategory {
   ELECTRICAL = "ELECTRICAL",
   PLUMBING = "PLUMBING",
@@ -103,8 +105,6 @@ const complaintSchema = new mongoose.Schema<IComplaint>(
   },
 );
 
-export const Complaint = mongoose.model("Complaint", complaintSchema);
-
 complaintSchema.index({ society: 1, status: 1, createdAt: -1 });
 
 complaintSchema.index({ assignedTo: 1, status: 1 });
@@ -112,3 +112,5 @@ complaintSchema.index({ assignedTo: 1, status: 1 });
 complaintSchema.index({ registeredBy: 1, createdAt: -1 });
 
 complaintSchema.index({ flat: 1, createdAt: -1 });
+
+export const Complaint = mongoose.model("Complaint", complaintSchema);
