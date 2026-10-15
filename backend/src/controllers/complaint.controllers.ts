@@ -390,7 +390,7 @@ export const assignStaff = async (req: Request, res: Response) => {
         assignedTo: staff._id,
         assignedBy: user?._id,
         status: ComplaintStatus.ASSIGNED,
-        estimatedClosureTime: date.setDate(date.getDate() + 2),
+        estimatedClosureTime: date.setDate(date.getDate() + 2).toLocaleString(),
       },
       { new: true, session },
     );
@@ -422,5 +422,153 @@ export const assignStaff = async (req: Request, res: Response) => {
     });
   } finally {
     await session.endSession();
+  }
+};
+
+export const checkAssignedComplaints = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (user?.role !== Role.MAINTENANCE) {
+      return res.status(401).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+
+    const assignedComplaints = await Complaint.find({
+      assignedTo: user.id,
+      status: ComplaintStatus.ASSIGNED,
+    })
+      .select("-_id -assignedTo -resolvedBy -resolvedAt")
+      .sort({ createdAt: 1 })
+      .lean();
+
+    if (assignedComplaints.length === 0) {
+      return res.status(200).json({
+        success: false,
+        message: "No assigned complaints for this user",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Assigned complaints fetched successfully",
+      assignedComplaints,
+    });
+  } catch (error) {
+    console.error("Error occurred while fetching assigned complaints", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const updateComplaintStatus = async (req: Request, res: Response) => {
+  try {
+    const { complaintId } = req.params;
+    const { complaintStatus } = req.body;
+    const user = req.user;
+    console.log(complaintId);
+
+    if (user?.role !== Role.MAINTENANCE) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+
+    if (
+      !complaintId ||
+      typeof complaintId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(complaintId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid complaint Id",
+      });
+    }
+
+    if (!complaintStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "Complaint status is required",
+      });
+    }
+
+    if (
+      !Object.values(ComplaintStatus).includes(
+        complaintStatus as ComplaintStatus,
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid complaint status value",
+      });
+    }
+
+    const complaint = await Complaint.findOne({
+      _id: complaintId,
+      assignedTo: user.id,
+    }).select("-_id -assignedTo -resolvedBy -resolvedAt");
+
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        message: "Complaint not found",
+      });
+    }
+
+    const transitions: Record<ComplaintStatus, ComplaintStatus[]> = {
+      [ComplaintStatus.PENDING]: [],
+      [ComplaintStatus.OPEN]: [],
+      [ComplaintStatus.ASSIGNED]: [ComplaintStatus.IN_PROGRESS],
+      [ComplaintStatus.IN_PROGRESS]: [ComplaintStatus.RESOLVED],
+      [ComplaintStatus.RESOLVED]: [],
+      [ComplaintStatus.CLOSED]: [],
+    };
+
+    const nextStatus = transitions[complaint.status];
+
+    if (!nextStatus.includes(complaintStatus)) {
+      return res.status(409).json({
+        success: false,
+        message: "This status transition is not allowed",
+      });
+    }
+
+    const updatedComplaint = await Complaint.findOneAndUpdate(
+      {
+        _id: complaintId,
+        assignedTo: user.id,
+        status: complaint.status,
+      },
+      {
+        status: complaintStatus,
+      },
+      {
+        returnDocument: "after",
+      },
+    );
+
+    if (!updatedComplaint) {
+      return res.status(409).json({
+        success: false,
+        message: "Complaint status was changed by another request",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Complaint status updated successfully",
+      updatedComplaint,
+    });
+  } catch (error) {
+    console.error("Error occured while updating complaint status", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };

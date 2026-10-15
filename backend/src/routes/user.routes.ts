@@ -13,6 +13,8 @@ import {
 import { createSocietyValidation } from "../validations/society.validations";
 import { getData } from "../controllers/user.controllers";
 import { verifyJWT } from "../middlewares/authenticate";
+import { authorize } from "../middlewares/authorize";
+import { Role } from "../models/user.models";
 import {
   createSociety,
   deleteSociety,
@@ -25,8 +27,6 @@ import {
   revokeSecretary,
   assignSecretary,
 } from "../controllers/admin.controllers";
-import { authorize } from "../middlewares/authorize";
-import { Role } from "../models/user.models";
 import {
   createFlat,
   getFlat,
@@ -42,6 +42,8 @@ import {
   getAllComplaints,
   getComplaintByFilter,
   assignStaff,
+  checkAssignedComplaints,
+  updateComplaintStatus,
 } from "../controllers/complaint.controllers";
 
 const authRouter = Router();
@@ -164,6 +166,13 @@ flatRouter.delete(
   removeFlatOwner,
 );
 
+complaintRouter.get(
+  "/complaints/check-assigned",
+  verifyJWT,
+  authorize(Role.MAINTENANCE),
+  checkAssignedComplaints,
+);
+
 complaintRouter.post(
   "/societies/complaints/:flatId",
   verifyJWT,
@@ -198,6 +207,14 @@ complaintRouter.post(
   authorize(Role.SECRETARY),
   assignStaff,
 );
+
+complaintRouter.patch(
+  "/complaints/:complaintId/update",
+  verifyJWT,
+  authorize(Role.MAINTENANCE),
+  updateComplaintStatus,
+);
+
 export {
   authRouter,
   userRouter,
