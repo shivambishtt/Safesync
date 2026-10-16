@@ -10,6 +10,7 @@ import { Flat } from "../models/flat.models";
 import mongoose from "mongoose";
 import { Society } from "../models/society.models";
 import { getComplaintByFilterQuerySchema } from "../validations/querySchema.validations";
+import { calculateEstimatedClosureTime } from "../utils/calculateEstimatedClosure";
 
 export const registerComplaint = async (req: Request, res: Response) => {
   try {
@@ -314,7 +315,6 @@ export const getComplaintByFilter = async (req: Request, res: Response) => {
 
 export const assignStaff = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
-  const date = new Date();
   try {
     const { complaintId } = req.params;
     const user = req.user;
@@ -381,6 +381,12 @@ export const assignStaff = async (req: Request, res: Response) => {
       });
     }
 
+    const estimatedTime = calculateEstimatedClosureTime(
+      complaint.category,
+      complaint.priority,
+      new Date(),
+    );
+
     const updatedComplaint = await Complaint.findOneAndUpdate(
       {
         _id: complaintId,
@@ -390,7 +396,7 @@ export const assignStaff = async (req: Request, res: Response) => {
         assignedTo: staff._id,
         assignedBy: user?._id,
         status: ComplaintStatus.ASSIGNED,
-        estimatedClosureTime: date.setDate(date.getDate() + 2).toLocaleString(),
+        estimatedClosureTime: estimatedTime,
       },
       { new: true, session },
     );
@@ -570,5 +576,97 @@ export const updateComplaintStatus = async (req: Request, res: Response) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+export const markComplaintResolve = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+  try {
+    const { complaintId } = req.params;
+    const user = req.user;
+
+    if (user?.role !== Role.MAINTENANCE) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+
+    if (
+      !complaintId ||
+      typeof complaintId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(complaintId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid complaint Id",
+      });
+    }
+
+    session.startTransaction();
+
+    const resolvedComplaint = await Complaint.findOneAndUpdate(
+      {
+        _id: complaintId,
+        assignedTo: user.id,
+        status: ComplaintStatus.IN_PROGRESS,
+      },
+      {
+        $set: {
+          status: ComplaintStatus.RESOLVED,
+          resolvedBy: user.id,
+          resolvedAt: new Date(),
+        },
+      },
+      {
+        returnDocument: "after",
+        session,
+      },
+    );
+
+    if (!resolvedComplaint) {
+      return res.status(409).json({
+        success: false,
+        message: "Complaint not found",
+      });
+    }
+
+    const releaseUser = await User.findOneAndUpdate(
+      {
+        _id: user.id,
+      },
+      {
+        $set: {
+          isAvailable: true,
+        },
+      },
+      {
+        returnDocument: "after",
+        session,
+      },
+    );
+
+    if (!releaseUser) {
+      return res.status(409).json({
+        sucess: false,
+        message: "User details not updated",
+      });
+    }
+    await session.commitTransaction();
+
+    return res.status(200).json({
+      success: true,
+      message: "Complaint resolved succesfully",
+      resolvedComplaint,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Error occured while resolving the complaint", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  } finally {
+    await session.endSession();
   }
 };

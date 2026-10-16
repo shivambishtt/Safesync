@@ -44,6 +44,7 @@ import {
   assignStaff,
   checkAssignedComplaints,
   updateComplaintStatus,
+  markComplaintResolve,
 } from "../controllers/complaint.controllers";
 
 const authRouter = Router();
@@ -213,6 +214,13 @@ complaintRouter.patch(
   verifyJWT,
   authorize(Role.MAINTENANCE),
   updateComplaintStatus,
+);
+
+complaintRouter.patch(
+  "/complaints/:complaintId/resolve",
+  verifyJWT,
+  authorize(Role.MAINTENANCE),
+  markComplaintResolve,
 );
 
 export {
