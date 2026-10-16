@@ -13,6 +13,8 @@ import {
 import { createSocietyValidation } from "../validations/society.validations";
 import { getData } from "../controllers/user.controllers";
 import { verifyJWT } from "../middlewares/authenticate";
+import { authorize } from "../middlewares/authorize";
+import { Role } from "../models/user.models";
 import {
   createSociety,
   deleteSociety,
@@ -25,8 +27,6 @@ import {
   revokeSecretary,
   assignSecretary,
 } from "../controllers/admin.controllers";
-import { authorize } from "../middlewares/authorize";
-import { Role } from "../models/user.models";
 import {
   createFlat,
   getFlat,
@@ -36,12 +36,23 @@ import {
   removeFlatOwner,
   updateFlatOwner,
 } from "../controllers/flat.controllers";
+import {
+  registerComplaint,
+  getComplaint,
+  getAllComplaints,
+  getComplaintByFilter,
+  assignStaff,
+  checkAssignedComplaints,
+  updateComplaintStatus,
+  markComplaintResolve,
+} from "../controllers/complaint.controllers";
 
 const authRouter = Router();
 const userRouter = Router();
 const societyRouter = Router();
 const adminRouter = Router();
 const flatRouter = Router();
+const complaintRouter = Router();
 
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
@@ -156,4 +167,67 @@ flatRouter.delete(
   removeFlatOwner,
 );
 
-export { authRouter, userRouter, societyRouter, adminRouter, flatRouter };
+complaintRouter.get(
+  "/complaints/check-assigned",
+  verifyJWT,
+  authorize(Role.MAINTENANCE),
+  checkAssignedComplaints,
+);
+
+complaintRouter.post(
+  "/societies/complaints/:flatId",
+  verifyJWT,
+  authorize(Role.RESIDENT, Role.SECRETARY),
+  registerComplaint,
+);
+
+complaintRouter.get(
+  "/complaints/:complaintId",
+  verifyJWT,
+  authorize(Role.RESIDENT, Role.SECRETARY),
+  getComplaint,
+);
+
+complaintRouter.get(
+  "/societies/complaints/:societyId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getAllComplaints,
+);
+
+complaintRouter.get(
+  "/societies/complaints/filter/:societyId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getComplaintByFilter,
+);
+
+complaintRouter.post(
+  "/complaints/:complaintId/assign",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  assignStaff,
+);
+
+complaintRouter.patch(
+  "/complaints/:complaintId/update",
+  verifyJWT,
+  authorize(Role.MAINTENANCE),
+  updateComplaintStatus,
+);
+
+complaintRouter.patch(
+  "/complaints/:complaintId/resolve",
+  verifyJWT,
+  authorize(Role.MAINTENANCE),
+  markComplaintResolve,
+);
+
+export {
+  authRouter,
+  userRouter,
+  societyRouter,
+  adminRouter,
+  flatRouter,
+  complaintRouter,
+};
