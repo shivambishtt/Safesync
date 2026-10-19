@@ -3,6 +3,7 @@ import { Role, User } from "../models/user.models";
 import { updateProfileValidation } from "../validations/user.validations";
 import mongoose from "mongoose";
 import { Society } from "../models/society.models";
+import { Flat } from "../models/flat.models";
 
 export const getData = async (req: Request, res: Response) => {
   try {
@@ -153,3 +154,73 @@ export const getUserSociety = async (req: Request, res: Response) => {
   }
 };
 
+export const viewSocietyResidents = async (req: Request, res: Response) => {
+  try {
+    const { societyId } = req.params;
+    const user = req.user;
+
+    if (!societyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing society Id",
+      });
+    }
+
+    if (
+      typeof societyId !== "string" ||
+      !mongoose.Types.ObjectId.isValid(societyId)
+    ) {
+      return res.status(409).json({
+        success: false,
+        message: "Invalid society Id",
+      });
+    }
+
+    const society = await Society.findById(societyId).select("secretary");
+
+    if (!society) {
+      return res.status(404).json({
+        success: false,
+        message: "Society not found",
+      });
+    }
+
+    if (society?.secretary?.toString() !== user?.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only view residents in your society",
+      });
+    }
+
+    const flats = await Flat.find({
+      society: society._id,
+      owner: {
+        $ne: null,
+      },
+    })
+      .select("flatNumber owner floor society flatStatus")
+      .populate({
+        path: "owner",
+        select: "name email phoneNumber",
+      });
+
+    if (flats.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No flat found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Society residents fetched successfully",
+      flats,
+    });
+  } catch (error) {
+    console.error("Error occured while fetching assigned complaints", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};

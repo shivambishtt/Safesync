@@ -19,6 +19,7 @@ import {
   getUserFlat,
   updateProfile,
   getUserSociety,
+  viewSocietyResidents,
 } from "../controllers/user.controllers";
 import {
   createSociety,
@@ -85,6 +86,13 @@ userRouter.get(
   verifyJWT,
   authorize(Role.RESIDENT),
   getUserSociety,
+);
+
+userRouter.get(
+  "/users/societies/residents",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.RESIDENT),
+  viewSocietyResidents,
 );
 
 societyRouter.post(
