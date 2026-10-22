@@ -27,6 +27,7 @@ interface User extends Document {
   flat?: mongoose.Types.ObjectId;
   applicationStatus: ApplicationStatus;
   isVerified: boolean;
+  code: string | null;
   generateAccessToken(): string;
   generateRefreshToken(): string;
 }
@@ -92,6 +93,11 @@ const userSchema = new mongoose.Schema<User>(
       type: Boolean,
       default: false,
     },
+
+    code: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -101,6 +107,12 @@ const userSchema = new mongoose.Schema<User>(
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
+});
+
+userSchema.pre("save", async function () {
+  if (!this.isModified("code")) return;
+  if (!this.code) return;
+  this.code = await bcrypt.hash(this.code, 10);
 });
 
 userSchema.methods.isPasswordValid = async function (password: string) {

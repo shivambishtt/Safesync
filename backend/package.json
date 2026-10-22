@@ -37,6 +37,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.2.0",
     "@types/node": "^26.1.2",
+    "@types/react": "^19.3.0",
     "@types/socket.io": "^3.0.1",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
