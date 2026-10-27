@@ -28,6 +28,7 @@ interface User extends Document {
   applicationStatus: ApplicationStatus;
   isVerified: boolean;
   code: string | null;
+  verificationCodeExpiry: Date | null;
   generateAccessToken(): string;
   generateRefreshToken(): string;
 }
@@ -96,6 +97,10 @@ const userSchema = new mongoose.Schema<User>(
 
     code: {
       type: String,
+      default: null,
+    },
+    verificationCodeExpiry: {
+      type: Date,
       default: null,
     },
   },
