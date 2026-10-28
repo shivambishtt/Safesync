@@ -3,6 +3,8 @@ import { User } from "../models/user.models";
 import { verifyRefreshToken } from "../middlewares/authenticate";
 import bcrypt from "bcrypt";
 import { hashToken } from "../utils/token.utils";
+import { generateCode } from "../utils/generateCode";
+import { sendVerificationEmail } from "../emails/verification.email";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -27,6 +29,9 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
+
+    const verificationCode = generateCode();
+
     const user = await User.create({
       name,
       email,
@@ -36,6 +41,16 @@ export const register = async (req: Request, res: Response) => {
       society,
       flat,
     });
+
+    user.code = verificationCode;
+    user.verificationCodeExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+
+    await sendVerificationEmail(
+      email,
+      verificationCode,
+      user.verificationCodeExpiry,
+    );
 
     return res.status(201).json({
       success: true,

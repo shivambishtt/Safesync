@@ -4,8 +4,14 @@ import { VerificationEmail } from "../emails/VerificationEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export const sendVerificationEmail = async (email: string, code: string) => {
-  const html = await render(VerificationEmail({ code }));
+export const sendVerificationEmail = async (
+  email: string,
+  code: string,
+  verificationCodeExpiry: Date,
+) => {
+  const html = await render(
+    VerificationEmail({ code, verificationCodeExpiry }),
+  );
 
   const { data, error } = await resend.emails.send({
     from: process.env.EMAIL_FROM!,

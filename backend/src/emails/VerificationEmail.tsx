@@ -10,9 +10,13 @@ import {
 
 interface VerificationEmailProps {
   code: string;
+  verificationCodeExpiry: Date;
 }
 
-export const VerificationEmail = ({ code }: VerificationEmailProps) => {
+export const VerificationEmail = ({
+  code,
+  verificationCodeExpiry,
+}: VerificationEmailProps) => {
   return (
     <Html>
       <Head />
@@ -38,7 +42,9 @@ export const VerificationEmail = ({ code }: VerificationEmailProps) => {
 
           <Heading style={{ letterSpacing: "8px" }}>{code}</Heading>
 
-          <Text>This code expires in 10 minutes.</Text>
+          <Text>
+            This code expires in {verificationCodeExpiry.getMinutes()} minutes.
+          </Text>
 
           <Hr />
 
