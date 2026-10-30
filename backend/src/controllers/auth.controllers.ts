@@ -29,7 +29,6 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-
     const verificationCode = generateCode();
 
     const user = await User.create({
@@ -246,6 +245,71 @@ export const refresh_token = async (req: Request, res: Response) => {
     return res.status(401).json({
       success: false,
       message: "Invalid or expired refresh token",
+    });
+  }
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { email, code } = req.body;
+
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already verified",
+      });
+    }
+
+    if (!user.code || !user.verificationCodeExpiry) {
+      return res.status(400).json({
+        success: false,
+        message: "No active verification code found",
+      });
+    }
+
+    if (user.verificationCodeExpiry.getTime() < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification code has expired",
+      });
+    }
+
+    const isCodeValid = await bcrypt.compare(code, user.code);
+
+    if (!isCodeValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification code",
+      });
+    }
+
+    user.isVerified = true;
+    user.code = null;
+    user.verificationCodeExpiry = null;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+    });
+  } catch (error) {
+    console.error("Email verification error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
     });
   }
 };

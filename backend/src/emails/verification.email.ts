@@ -14,7 +14,7 @@ export const sendVerificationEmail = async (
   );
 
   const { data, error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM!,
+    from: process.env.RESEND_EMAIL_FROM!,
     to: email,
     subject: "Verify your SafeSync account",
     html,

@@ -4,6 +4,7 @@ import {
   login,
   logout,
   refresh_token,
+  verifyEmail,
 } from "../controllers/auth.controllers";
 import { validate } from "../middlewares/validate";
 import {
@@ -64,6 +65,7 @@ authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
 authRouter.post("/logout", logout);
 authRouter.post("/refresh-token", refresh_token);
+authRouter.post("/verify-email", verifyEmail);
 
 userRouter.get("/user", verifyJWT, getData);
 

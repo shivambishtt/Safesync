@@ -42,9 +42,7 @@ export const VerificationEmail = ({
 
           <Heading style={{ letterSpacing: "8px" }}>{code}</Heading>
 
-          <Text>
-            This code expires in {verificationCodeExpiry.getMinutes()} minutes.
-          </Text>
+          <Text>This code expires in 10 minutes.</Text>
 
           <Hr />
 
