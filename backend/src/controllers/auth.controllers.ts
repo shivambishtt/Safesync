@@ -48,7 +48,6 @@ export const register = async (req: Request, res: Response) => {
     await sendVerificationEmail(
       email,
       verificationCode,
-      user.verificationCodeExpiry,
     );
 
     return res.status(201).json({

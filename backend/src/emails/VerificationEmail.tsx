@@ -10,12 +10,10 @@ import {
 
 interface VerificationEmailProps {
   code: string;
-  verificationCodeExpiry: Date;
 }
 
 export const VerificationEmail = ({
   code,
-  verificationCodeExpiry,
 }: VerificationEmailProps) => {
   return (
     <Html>
