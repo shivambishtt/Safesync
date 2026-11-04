@@ -5,6 +5,7 @@ import {
   logout,
   refresh_token,
   verifyEmail,
+  changePassword,
 } from "../controllers/auth.controllers";
 import { validate } from "../middlewares/validate";
 import {
@@ -64,6 +65,12 @@ const complaintRouter = Router();
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
 authRouter.post("/logout", logout);
+authRouter.patch(
+  "/change-password",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  changePassword,
+);
 authRouter.post("/refresh-token", refresh_token);
 authRouter.post("/verify-email", verifyEmail);
 

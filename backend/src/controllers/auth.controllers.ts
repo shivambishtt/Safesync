@@ -45,10 +45,7 @@ export const register = async (req: Request, res: Response) => {
     user.verificationCodeExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
-    await sendVerificationEmail(
-      email,
-      verificationCode,
-    );
+    await sendVerificationEmail(email, verificationCode);
 
     return res.status(201).json({
       success: true,
@@ -177,6 +174,77 @@ export const logout = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error occured while loggin out", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const userId = req?.user?.id;
+    const { currentPassword, newPassword } = req.body;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized request",
+      });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password is required",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must contain at least 6 characters",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is incorrect",
+      });
+    }
+
+    const isPasswordSame = await bcrypt.compare(newPassword, user.password);
+
+    if (isPasswordSame) {
+      return res.status(400).json({
+        success: false,
+        message: "Old password and new password cannot be same",
+      });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
