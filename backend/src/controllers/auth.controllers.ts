@@ -4,7 +4,7 @@ import { verifyRefreshToken } from "../middlewares/authenticate";
 import bcrypt from "bcrypt";
 import { hashToken } from "../utils/token.utils";
 import { generateCode } from "../utils/generateCode";
-import { sendVerificationEmail } from "../emails/verification.email";
+import { sendVerificationEmail } from "../emails/email.services";
 
 export const register = async (req: Request, res: Response) => {
   try {

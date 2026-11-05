@@ -29,6 +29,8 @@ interface User extends Document {
   isVerified: boolean;
   code: string | null;
   verificationCodeExpiry: Date | null;
+  passwordResetToken?: string;
+  passwordResetTokenExpiry?: Date;
   generateAccessToken(): string;
   generateRefreshToken(): string;
 }
@@ -99,7 +101,18 @@ const userSchema = new mongoose.Schema<User>(
       type: String,
       default: null,
     },
+
     verificationCodeExpiry: {
+      type: Date,
+      default: null,
+    },
+
+    passwordResetToken: {
+      type: String,
+      default: null,
+    },
+
+    passwordResetTokenExpiry: {
       type: Date,
       default: null,
     },
