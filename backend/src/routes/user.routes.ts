@@ -6,6 +6,7 @@ import {
   refresh_token,
   verifyEmail,
   changePassword,
+  forgotPassword,
 } from "../controllers/auth.controllers";
 import { validate } from "../middlewares/validate";
 import {
@@ -73,6 +74,7 @@ authRouter.patch(
 );
 authRouter.post("/refresh-token", refresh_token);
 authRouter.post("/verify-email", verifyEmail);
+authRouter.post("/forgot-password", forgotPassword);
 
 userRouter.get("/user", verifyJWT, getData);
 

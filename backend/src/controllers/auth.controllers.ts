@@ -4,7 +4,11 @@ import { verifyRefreshToken } from "../middlewares/authenticate";
 import bcrypt from "bcrypt";
 import { hashToken } from "../utils/token.utils";
 import { generateCode } from "../utils/generateCode";
-import { sendVerificationEmail } from "../emails/email.services";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "../emails/email.services";
+import { generateResetPasswordToken } from "../utils/generateResetToken";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -245,6 +249,51 @@ export const changePassword = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Change password error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const user = await User.findOne(email.toLowerCase().trim());
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "If an account exists with this email, a password reset link will be sent.",
+      });
+    }
+
+    const { resetToken, hashedToken } = generateResetPasswordToken();
+
+    user.passwordResetToken = hashedToken;
+    user.passwordResetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000);
+
+    await user.save();
+    const resetUrl = `https://localhost:3000/reset-password?token=${resetToken}`;
+
+    await sendPasswordResetEmail(email, resetUrl);
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "If an account exists with this email, a password reset link will be sent.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
