@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import { render } from "@react-email/render";
 import { VerificationEmail } from "./VerificationEmail";
-import {PasswordResetEmail} from "./PasswordResetEmail";
+import { PasswordResetEmail } from "./PasswordResetEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
