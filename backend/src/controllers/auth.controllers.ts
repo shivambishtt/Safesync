@@ -267,13 +267,12 @@ export const forgotPassword = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.findOne(email.toLowerCase().trim());
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message:
-          "If an account exists with this email, a password reset link will be sent.",
+        message: "User not found.",
       });
     }
 
@@ -283,14 +282,13 @@ export const forgotPassword = async (req: Request, res: Response) => {
     user.passwordResetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
     await user.save();
-    const resetUrl = `https://localhost:3000/reset-password?token=${resetToken}`;
+    const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
 
     await sendPasswordResetEmail(email, resetUrl);
 
     return res.status(200).json({
       success: true,
-      message:
-        "If an account exists with this email, a password reset link will be sent.",
+      message: "Password reset email sent successfully.",
     });
   } catch (error) {
     console.error("Forgot password error:", error);
