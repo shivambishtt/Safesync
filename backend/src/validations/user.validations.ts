@@ -36,4 +36,34 @@ const loginValidation = z
   })
   .strict();
 
-export { registerValidation, loginValidation };
+const updateProfileValidation = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, "Name must be at least 2 characters")
+      .optional(),
+
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Please provide a valid email address")
+      .optional(),
+
+    password: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .optional(),
+
+    phoneNumber: z
+      .string()
+      .regex(/^[6-9]\d{9}$/, "Please provide a valid phone number")
+      .optional(),
+  })
+  .strict()
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: "Provide atleast one field to update",
+  });
+
+export { registerValidation, loginValidation, updateProfileValidation };

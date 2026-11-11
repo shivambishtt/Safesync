@@ -4,6 +4,9 @@ import {
   login,
   logout,
   refresh_token,
+  verifyEmail,
+  changePassword,
+  forgotPassword,
 } from "../controllers/auth.controllers";
 import { validate } from "../middlewares/validate";
 import {
@@ -11,10 +14,16 @@ import {
   loginValidation,
 } from "../validations/user.validations";
 import { createSocietyValidation } from "../validations/society.validations";
-import { getData } from "../controllers/user.controllers";
 import { verifyJWT } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
 import { Role } from "../models/user.models";
+import {
+  getData,
+  getUserFlat,
+  updateProfile,
+  getUserSociety,
+  viewSocietyResidents,
+} from "../controllers/user.controllers";
 import {
   createSociety,
   deleteSociety,
@@ -57,9 +66,45 @@ const complaintRouter = Router();
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
 authRouter.post("/logout", logout);
+authRouter.patch(
+  "/change-password",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  changePassword,
+);
 authRouter.post("/refresh-token", refresh_token);
+authRouter.post("/verify-email", verifyEmail);
+authRouter.post("/forgot-password", forgotPassword);
 
 userRouter.get("/user", verifyJWT, getData);
+
+userRouter.patch(
+  "/users/update",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.RESIDENT),
+  updateProfile,
+);
+
+userRouter.get(
+  "/users/flats",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  getUserFlat,
+);
+
+userRouter.get(
+  "/users/societies",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  getUserSociety,
+);
+
+userRouter.get(
+  "/users/societies/residents",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.RESIDENT),
+  viewSocietyResidents,
+);
 
 societyRouter.post(
   "/societies",
@@ -146,7 +191,7 @@ flatRouter.delete(
   deleteFlat,
 );
 
-flatRouter.post(
+flatRouter.patch(
   "/flats/:flatId/owner",
   verifyJWT,
   authorize(Role.SECRETARY),

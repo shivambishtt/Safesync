@@ -3,6 +3,12 @@ import { User } from "../models/user.models";
 import { verifyRefreshToken } from "../middlewares/authenticate";
 import bcrypt from "bcrypt";
 import { hashToken } from "../utils/token.utils";
+import { generateCode } from "../utils/generateCode";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "../emails/email.services";
+import { generateResetPasswordToken } from "../utils/generateResetToken";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -27,6 +33,8 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
+    const verificationCode = generateCode();
+
     const user = await User.create({
       name,
       email,
@@ -36,6 +44,12 @@ export const register = async (req: Request, res: Response) => {
       society,
       flat,
     });
+
+    user.code = verificationCode;
+    user.verificationCodeExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+
+    await sendVerificationEmail(email, verificationCode);
 
     return res.status(201).json({
       success: true,
@@ -171,6 +185,120 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const userId = req?.user?.id;
+    const { currentPassword, newPassword } = req.body;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized request",
+      });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password is required",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must contain at least 6 characters",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is incorrect",
+      });
+    }
+
+    const isPasswordSame = await bcrypt.compare(newPassword, user.password);
+
+    if (isPasswordSame) {
+      return res.status(400).json({
+        success: false,
+        message: "Old password and new password cannot be same",
+      });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const { resetToken, hashedToken } = generateResetPasswordToken();
+
+    user.passwordResetToken = hashedToken;
+    user.passwordResetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000);
+
+    await user.save();
+    const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
+
+    await sendPasswordResetEmail(email, resetUrl);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset email sent successfully.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export const refresh_token = async (req: Request, res: Response) => {
   try {
     const token = req.cookies?.refreshToken;
@@ -231,6 +359,71 @@ export const refresh_token = async (req: Request, res: Response) => {
     return res.status(401).json({
       success: false,
       message: "Invalid or expired refresh token",
+    });
+  }
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { email, code } = req.body;
+
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already verified",
+      });
+    }
+
+    if (!user.code || !user.verificationCodeExpiry) {
+      return res.status(400).json({
+        success: false,
+        message: "No active verification code found",
+      });
+    }
+
+    if (user.verificationCodeExpiry.getTime() < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification code has expired",
+      });
+    }
+
+    const isCodeValid = await bcrypt.compare(code, user.code);
+
+    if (!isCodeValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification code",
+      });
+    }
+
+    user.isVerified = true;
+    user.code = null;
+    user.verificationCodeExpiry = null;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+    });
+  } catch (error) {
+    console.error("Email verification error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
     });
   }
 };

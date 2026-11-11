@@ -398,6 +398,23 @@ export const addFlatOwner = async (req: Request, res: Response) => {
       });
     }
 
+    await User.findOneAndUpdate(
+      {
+        _id: ownerId,
+        role: Role.RESIDENT,
+        flat: null,
+      },
+      {
+        $set: {
+          flat: flatId,
+          society: updatedFlat.society,
+        },
+      },
+      {
+        returnDocument: "after",
+      },
+    );
+
     return res.status(200).json({
       success: true,
       message: "Owner added to flat successfully",

@@ -27,6 +27,10 @@ interface User extends Document {
   flat?: mongoose.Types.ObjectId;
   applicationStatus: ApplicationStatus;
   isVerified: boolean;
+  code: string | null;
+  verificationCodeExpiry: Date | null;
+  passwordResetToken?: string;
+  passwordResetTokenExpiry?: Date;
   generateAccessToken(): string;
   generateRefreshToken(): string;
 }
@@ -92,6 +96,26 @@ const userSchema = new mongoose.Schema<User>(
       type: Boolean,
       default: false,
     },
+
+    code: {
+      type: String,
+      default: null,
+    },
+
+    verificationCodeExpiry: {
+      type: Date,
+      default: null,
+    },
+
+    passwordResetToken: {
+      type: String,
+      default: null,
+    },
+
+    passwordResetTokenExpiry: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -101,6 +125,12 @@ const userSchema = new mongoose.Schema<User>(
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
+});
+
+userSchema.pre("save", async function () {
+  if (!this.isModified("code")) return;
+  if (!this.code) return;
+  this.code = await bcrypt.hash(this.code, 10);
 });
 
 userSchema.methods.isPasswordValid = async function (password: string) {
@@ -123,4 +153,4 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-export const User = mongoose.model("User", userSchema);
+export const User = mongoose.model<User>("User", userSchema);
