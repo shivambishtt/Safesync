@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from "../models/user.models";
+import { ApplicationStatus, User } from "../models/user.models";
 import { verifyRefreshToken } from "../middlewares/authenticate";
 import bcrypt from "bcrypt";
 import { hashToken } from "../utils/token.utils";
@@ -411,6 +411,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     user.isVerified = true;
     user.code = null;
     user.verificationCodeExpiry = null;
+    user.applicationStatus = ApplicationStatus.ACCEPTED;
 
     await user.save();
 

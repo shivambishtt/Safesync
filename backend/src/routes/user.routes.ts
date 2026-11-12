@@ -56,12 +56,15 @@ import {
   markComplaintResolve,
 } from "../controllers/complaint.controllers";
 
+import { registerVisitor } from "../controllers/visitor.controllers";
+
 const authRouter = Router();
 const userRouter = Router();
 const societyRouter = Router();
 const adminRouter = Router();
 const flatRouter = Router();
 const complaintRouter = Router();
+const visitorRouter = Router();
 
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
@@ -268,6 +271,13 @@ complaintRouter.patch(
   markComplaintResolve,
 );
 
+visitorRouter.post(
+  "/visitor/",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  registerVisitor,
+);
+
 export {
   authRouter,
   userRouter,
@@ -275,4 +285,7 @@ export {
   adminRouter,
   flatRouter,
   complaintRouter,
+  visitorRouter,
 };
+
+// todo: Write controller for the security guard to become a part of the society

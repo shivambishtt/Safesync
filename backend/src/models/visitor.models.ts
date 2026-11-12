@@ -1,6 +1,4 @@
 import mongoose, { Document } from "mongoose";
-import bcrypt from "bcrypt";
-import jwt, { SignOptions } from "jsonwebtoken";
 
 export enum VisitStatus {
   PENDING = "PENDING",
@@ -23,10 +21,11 @@ interface IVisitor extends Document {
   phoneNumber: string;
   purpose: VisitPurpose;
   visitTo: mongoose.Types.ObjectId;
-  visitBy: mongoose.Types.ObjectId;
+  resident: mongoose.Types.ObjectId;
+  allowedBy?: mongoose.Types.ObjectId;
   visitStatus: VisitStatus;
-  checkInTime?: Date;
-  checkoutTime?: Date;
+  checkInTime?: Date | null;
+  checkoutTime?: Date | null;
 }
 
 const visitorSchema = new mongoose.Schema<IVisitor>(
@@ -62,10 +61,16 @@ const visitorSchema = new mongoose.Schema<IVisitor>(
       required: true,
     },
 
-    visitBy: {
+    resident: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+
+    allowedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
 
     visitStatus: {
