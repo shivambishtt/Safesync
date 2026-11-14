@@ -55,8 +55,19 @@ import {
   updateComplaintStatus,
   markComplaintResolve,
 } from "../controllers/complaint.controllers";
-
-import { registerVisitor } from "../controllers/visitor.controllers";
+import {
+  allowVisitorEntry,
+  checkInVisitor,
+  checkOutVisitor,
+  getAllVisitors,
+  getMyVisitors,
+  getPendingVisitors,
+  getVisitorById,
+  getVisitorHistory,
+  getVisitorStats,
+  registerVisitor,
+  rejectVisitorEntry,
+} from "../controllers/visitor.controllers";
 
 const authRouter = Router();
 const userRouter = Router();
@@ -278,6 +289,71 @@ visitorRouter.post(
   registerVisitor,
 );
 
+visitorRouter.patch(
+  "/:visitorId/approve",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  allowVisitorEntry,
+);
+
+visitorRouter.patch(
+  "/:visitorId/reject",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  rejectVisitorEntry,
+);
+
+visitorRouter.patch(
+  "/:visitorId/check-in",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  checkInVisitor,
+);
+
+visitorRouter.patch(
+  "/:visitorId/check-out",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  checkOutVisitor,
+);
+
+visitorRouter.get(
+  "/:visitorId",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SECURITY),
+  getVisitorById,
+);
+
+visitorRouter.get("/", verifyJWT, authorize(Role.SECRETARY), getAllVisitors);
+
+visitorRouter.get(
+  "/my-visitors",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  getMyVisitors,
+);
+
+visitorRouter.get(
+  "/pending",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SECURITY),
+  getPendingVisitors,
+);
+
+visitorRouter.get(
+  "/stats",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SECURITY, Role.RESIDENT),
+  getVisitorStats,
+);
+
+visitorRouter.get(
+  "/history",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SECURITY),
+  getVisitorHistory,
+);
+
 export {
   authRouter,
   userRouter,
@@ -287,5 +363,3 @@ export {
   complaintRouter,
   visitorRouter,
 };
-
-// todo: Write controller for the security guard to become a part of the society
