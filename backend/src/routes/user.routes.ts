@@ -55,6 +55,19 @@ import {
   updateComplaintStatus,
   markComplaintResolve,
 } from "../controllers/complaint.controllers";
+import {
+  allowVisitorEntry,
+  checkInVisitor,
+  checkOutVisitor,
+  getAllVisitors,
+  getMyVisitors,
+  getPendingVisitors,
+  getVisitorById,
+  getVisitorHistory,
+  getVisitorStats,
+  registerVisitor,
+  rejectVisitorEntry,
+} from "../controllers/visitor.controllers";
 
 const authRouter = Router();
 const userRouter = Router();
@@ -62,6 +75,7 @@ const societyRouter = Router();
 const adminRouter = Router();
 const flatRouter = Router();
 const complaintRouter = Router();
+const visitorRouter = Router();
 
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
@@ -268,6 +282,78 @@ complaintRouter.patch(
   markComplaintResolve,
 );
 
+visitorRouter.post(
+  "/visitor/",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  registerVisitor,
+);
+
+visitorRouter.patch(
+  "/:visitorId/approve",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  allowVisitorEntry,
+);
+
+visitorRouter.patch(
+  "/:visitorId/reject",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  rejectVisitorEntry,
+);
+
+visitorRouter.patch(
+  "/:visitorId/check-in",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  checkInVisitor,
+);
+
+visitorRouter.patch(
+  "/:visitorId/check-out",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  checkOutVisitor,
+);
+
+visitorRouter.get(
+  "/:visitorId",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SECURITY),
+  getVisitorById,
+);
+
+visitorRouter.get("/", verifyJWT, authorize(Role.SECRETARY), getAllVisitors);
+
+visitorRouter.get(
+  "/my-visitors",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  getMyVisitors,
+);
+
+visitorRouter.get(
+  "/pending",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SECURITY),
+  getPendingVisitors,
+);
+
+visitorRouter.get(
+  "/stats",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SECURITY, Role.RESIDENT),
+  getVisitorStats,
+);
+
+visitorRouter.get(
+  "/history",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SECURITY),
+  getVisitorHistory,
+);
+
 export {
   authRouter,
   userRouter,
@@ -275,4 +361,5 @@ export {
   adminRouter,
   flatRouter,
   complaintRouter,
+  visitorRouter,
 };

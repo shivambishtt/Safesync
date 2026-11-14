@@ -10,8 +10,8 @@ import {
   userRouter,
   flatRouter,
   complaintRouter,
+  visitorRouter,
 } from "./routes/user.routes";
-
 
 const app: Application = express();
 
@@ -31,5 +31,6 @@ app.use("/api/v1/", societyRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/", flatRouter);
 app.use("/api/v1/", complaintRouter);
+app.use("/api/v1/", visitorRouter);
 
 export default app;
