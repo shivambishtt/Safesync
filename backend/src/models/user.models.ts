@@ -27,6 +27,7 @@ interface User extends Document {
   flat?: mongoose.Types.ObjectId;
   applicationStatus: ApplicationStatus;
   isVerified: boolean;
+  isActive: boolean;
   code: string | null;
   verificationCodeExpiry: Date | null;
   passwordResetToken?: string;
@@ -95,6 +96,11 @@ const userSchema = new mongoose.Schema<User>(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
     },
 
     code: {
