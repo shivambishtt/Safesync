@@ -842,9 +842,10 @@ export const getVisitorHistory = async (req: Request, res: Response) => {
     const visitors = await Visitor.find({
       visitTo: { $in: flatIds },
     })
-      .populate("visitTo", "flatNumber")
-      .populate("resident", "name")
-      .sort({ createdAt: -1 });
+      .populate("visitTo", "flatNumber block")
+      .populate("resident", "name email phoneNumber")
+      .populate("allowedBy", "name")
+      .sort({ updatedAt: -1 });
 
     return res.status(200).json({
       success: true,

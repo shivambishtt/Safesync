@@ -14,7 +14,10 @@ interface User {
   society: string | null;
   flat: string | null;
   isVerified: boolean;
+  isActive?: boolean;
   applicationStatus?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface Session {

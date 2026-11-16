@@ -122,10 +122,13 @@ export const getUserSociety = async (req: Request, res: Response) => {
   try {
     const user = req.user;
 
-    if (user?.role !== Role.RESIDENT) {
+    if (
+      !user ||
+      ![Role.RESIDENT, Role.SECRETARY, Role.SECURITY].includes(user.role)
+    ) {
       return res.status(403).json({
         success: false,
-        message: "You are not authroized to perform this action",
+        message: "You are not authorized to view society details",
       });
     }
 

@@ -118,7 +118,7 @@ userRouter.get(
 userRouter.get(
   "/users/societies",
   verifyJWT,
-  authorize(Role.RESIDENT),
+  authorize(Role.RESIDENT, Role.SECRETARY, Role.SECURITY),
   getUserSociety,
 );
 
