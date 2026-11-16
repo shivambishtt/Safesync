@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Building2, ClipboardList, Shield, UserRoundCheck, Users } from "lucide-react";
+import {
+  Building2,
+  ClipboardList,
+  Shield,
+  UserRoundCheck,
+  Users,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const API_BASE_URL = "http://localhost:3000/api/v1";
@@ -18,20 +24,41 @@ interface Flat {
 interface Visitor {
   _id: string;
   name: string;
+  email?: string;
+  phoneNumber: string;
   purpose: string;
   visitStatus: string;
   createdAt: string;
+  updatedAt?: string;
+  checkInTime?: string | null;
+  checkoutTime?: string | null;
   visitTo?: { flatNumber?: string; block?: string } | null;
-  resident?: { name?: string } | null;
+  resident?: { name?: string; email?: string; phoneNumber?: string } | null;
+  allowedBy?: { name?: string } | null;
 }
 
 interface Complaint {
   _id: string;
   title: string;
+  description?: string;
   category: string;
   priority: string;
   status: string;
   createdAt: string;
+  resolvedAt?: string | null;
+  flat?: { flatNumber?: string; block?: string } | null;
+  registeredBy?: { name?: string; email?: string } | null;
+  assignedTo?: { name?: string } | null;
+  resolvedBy?: { name?: string } | null;
+}
+
+interface SecurityGuard {
+  _id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  isActive?: boolean;
+  isVerified?: boolean;
 }
 
 interface ApiResponse<T> {
@@ -41,6 +68,7 @@ interface ApiResponse<T> {
   visitors?: T;
   complaints?: T;
   complaint?: T;
+  guards?: T;
 }
 
 interface TableRow {
@@ -48,12 +76,15 @@ interface TableRow {
   cells: string[];
 }
 
-const sectionContent: Record<Section, { title: string; description: string; icon: typeof Users; columns: string[] }> = {
+const sectionContent: Record<
+  Section,
+  { title: string; description: string; icon: typeof Users; columns: string[] }
+> = {
   residents: {
     title: "Residents",
     description: "Resident accounts and their assigned flats.",
     icon: Users,
-    columns: ["Resident", "Flat", "Email", "Phone"],
+    columns: ["Resident", "Block", "Flat", "Email", "Phone"],
   },
   flats: {
     title: "Flats",
@@ -71,13 +102,37 @@ const sectionContent: Record<Section, { title: string; description: string; icon
     title: "Complaints",
     description: "Recent issues submitted by residents in your society.",
     icon: ClipboardList,
-    columns: ["Complaint", "Category", "Priority", "Status", "Created"],
+    columns: [
+      "Complaint",
+      "Reported By",
+      "Flat",
+      "Category",
+      "Priority",
+      "Status",
+      "Assigned To",
+      "Created",
+      "Resolved At",
+      "Resolved By",
+    ],
   },
   visitors: {
     title: "Visitors",
     description: "Recent visitor activity across your society.",
     icon: UserRoundCheck,
-    columns: ["Visitor", "Resident", "Flat", "Purpose", "Status", "Arrived"],
+    columns: [
+      "Visitor",
+      "Phone",
+      "Email",
+      "Resident",
+      "Block",
+      "Flat",
+      "Purpose",
+      "Current Status",
+      "Approved By",
+      "Check In",
+      "Check Out",
+      "Last Updated",
+    ],
   },
 };
 
@@ -94,18 +149,36 @@ async function getJson<T>(path: string): Promise<T> {
   return result as T;
 }
 
-function displayDate(value: string) {
+function displayDate(value?: string | number | Date | null) {
+  if (value === null || value === undefined || value === "" || value === 0 || value === "0") {
+    return "—";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
   return new Intl.DateTimeFormat("en-IN", {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 function pretty(value: string | undefined) {
-  return value?.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()) || "—";
+  return (
+    value
+      ?.toLowerCase()
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase()) || "—"
+  );
 }
 
-export default function SecretarySectionPage({ section }: { section: Section }) {
+export default function SecretarySectionPage({
+  section,
+}: {
+  section: Section;
+}) {
   const { session } = useAuth();
   const societyId = session.user?.society;
   const content = sectionContent[section];
@@ -123,58 +196,111 @@ export default function SecretarySectionPage({ section }: { section: Section }) 
       setRows([]);
 
       try {
-        if (section === "security") {
-          throw new Error("Security guard management is not registered in the backend router yet.");
-        }
         if (!societyId && section !== "visitors") {
           throw new Error("Your account is not linked to a society yet.");
         }
 
         let nextRows: TableRow[] = [];
 
-        if (section === "flats") {
-          const result = await getJson<ApiResponse<Flat[]>>(`/societies/${societyId}/flats`);
+        if (section === "security") {
+          const result =
+            await getJson<ApiResponse<SecurityGuard[]>>("/security/guards");
+          nextRows = (result.guards ?? []).map((guard) => ({
+            id: guard._id,
+            cells: [
+              guard.name,
+              guard.email,
+              guard.phoneNumber,
+              guard.isActive === false
+                ? "Inactive"
+                : guard.isVerified
+                  ? "Verified"
+                  : "Pending verification",
+            ],
+          }));
+        } else if (section === "flats") {
+          const result = await getJson<ApiResponse<Flat[]>>(
+            `/societies/${societyId}/flats`,
+          );
           nextRows = (result.flats ?? []).map((flat) => ({
             id: flat._id,
-            cells: [flat.flatNumber, flat.block, String(flat.floor), flat.flatType, pretty(flat.flatStatus)],
+            cells: [
+              flat.flatNumber,
+              flat.block,
+              String(flat.floor),
+              flat.flatType,
+              pretty(flat.flatStatus),
+            ],
           }));
         } else if (section === "residents") {
-          const result = await getJson<ApiResponse<Array<{ _id: string; flatNumber: string; block: string; owner?: { name?: string; email?: string; phoneNumber?: string } }>>>("/users/societies/residents");
+          const result = await getJson<
+            ApiResponse<
+              Array<{
+                _id: string;
+                flatNumber: string;
+                block: string;
+                owner?: { name?: string; email?: string; phoneNumber?: string };
+              }>
+            >
+          >(`/users/societies/${societyId}/residents`);
           nextRows = (result.flats ?? []).map((flat) => ({
             id: flat._id,
-            cells: [flat.owner?.name || "—", `${flat.block} ${flat.flatNumber}`, flat.owner?.email || "—", flat.owner?.phoneNumber || "—"],
+            cells: [
+              flat.owner?.name || "—",
+              flat.block || "—",
+              flat.flatNumber || "—",
+              flat.owner?.email || "—",
+              flat.owner?.phoneNumber || "—",
+            ],
           }));
         } else if (section === "visitors") {
-          const result = await getJson<ApiResponse<Visitor[]>>("/visitor/");
+          const result = await getJson<ApiResponse<Visitor[]>>("/");
           nextRows = (result.visitors ?? []).slice(0, 50).map((visitor) => ({
             id: visitor._id,
             cells: [
               visitor.name,
+              visitor.phoneNumber || "—",
+              visitor.email || "—",
               visitor.resident?.name || "—",
-              `${visitor.visitTo?.block || ""} ${visitor.visitTo?.flatNumber || "—"}`.trim(),
+              `${visitor.visitTo?.block || ""}`,
+              `${visitor.visitTo?.flatNumber || "—"}`.trim(),
               pretty(visitor.purpose),
               pretty(visitor.visitStatus),
-              displayDate(visitor.createdAt),
+              visitor.allowedBy?.name || "—",
+              displayDate(visitor.checkInTime),
+              displayDate(visitor.checkoutTime),
+              displayDate(visitor.updatedAt || visitor.createdAt),
             ],
           }));
         } else if (section === "complaints") {
-          const list = await getJson<ApiResponse<Array<{ _id: string }>>>(`/societies/complaints/${societyId}`);
-          const complaints = await Promise.all(
-            (list.complaints ?? []).map(async ({ _id }) => {
-              const result = await getJson<ApiResponse<Complaint>>(`/complaints/${_id}`);
-              return result.complaint;
-            }),
+          const list = await getJson<ApiResponse<Complaint[]>>(
+            `/societies/complaints/${societyId}`,
           );
-          nextRows = complaints.filter((complaint): complaint is Complaint => Boolean(complaint)).map((complaint) => ({
-            id: complaint._id,
-            cells: [complaint.title, pretty(complaint.category), pretty(complaint.priority), pretty(complaint.status), displayDate(complaint.createdAt)],
-          }));
+          nextRows = (list.complaints ?? []).map((complaint) => ({
+              id: complaint._id,
+              cells: [
+                complaint.title,
+                complaint.registeredBy?.name || "—",
+                `${complaint.flat?.block || ""} ${complaint.flat?.flatNumber || "—"}`.trim(),
+                pretty(complaint.category),
+                pretty(complaint.priority),
+                pretty(complaint.status),
+                complaint.assignedTo?.name || "—",
+                displayDate(complaint.createdAt),
+                complaint.resolvedAt ? displayDate(complaint.resolvedAt) : "—",
+                complaint.resolvedBy?.name || "—",
+              ],
+            }));
         }
 
         if (current) setRows(nextRows);
       } catch (cause) {
         if (current) {
-          setError(cause instanceof Error ? cause.message : "Could not load this section.");
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Could not load this section.",
+          );
         }
       } finally {
         if (current) setLoading(false);
@@ -194,36 +320,68 @@ export default function SecretarySectionPage({ section }: { section: Section }) 
           <Icon size={23} strokeWidth={1.8} />
         </span>
         <div>
-          <p className="text-sm font-medium text-[#0C8C5E]">Secretary workspace</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#08090A]">{content.title}</h1>
+          <p className="text-sm font-medium text-[#0C8C5E]">
+            Secretary workspace
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#08090A]">
+            {content.title}
+          </h1>
           <p className="mt-1 text-sm text-gray-500">{content.description}</p>
         </div>
       </header>
 
       <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {error ? (
-          <div role="alert" className="m-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div
+            role="alert"
+            className="m-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          >
             {error}
           </div>
         ) : loading ? (
-          <div className="space-y-3 p-6" aria-label={`Loading ${content.title.toLowerCase()}`}>
-            {[0, 1, 2, 3].map((item) => <div key={item} className="h-10 animate-pulse rounded-lg bg-gray-100" />)}
+          <div
+            className="space-y-3 p-6"
+            aria-label={`Loading ${content.title.toLowerCase()}`}
+          >
+            {[0, 1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="h-10 animate-pulse rounded-lg bg-gray-100"
+              />
+            ))}
           </div>
         ) : rows.length === 0 ? (
           <div className="px-6 py-14 text-center">
-            <p className="text-sm font-medium text-gray-800">No {content.title.toLowerCase()} found</p>
-            <p className="mt-1 text-sm text-gray-500">Records will appear here when they are available.</p>
+            <p className="text-sm font-medium text-gray-800">
+              No {content.title.toLowerCase()} found
+            </p>
+            <p className="mt-1 text-sm text-gray-500">
+              Records will appear here when they are available.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] border-collapse text-left text-sm">
               <thead className="bg-gray-50 text-xs font-medium uppercase tracking-wide text-gray-500">
-                <tr>{content.columns.map((column) => <th key={column} className="px-5 py-3.5">{column}</th>)}</tr>
+                <tr>
+                  {content.columns.map((column) => (
+                    <th key={column} className="px-5 py-3.5">
+                      {column}
+                    </th>
+                  ))}
+                </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {rows.map((row) => (
-                  <tr key={row.id} className="text-gray-700 hover:bg-gray-50/70">
-                    {row.cells.map((cell, index) => <td key={`${row.id}-${index}`} className="px-5 py-4">{cell}</td>)}
+                  <tr
+                    key={row.id}
+                    className="text-gray-700 hover:bg-gray-50/70"
+                  >
+                    {row.cells.map((cell, index) => (
+                      <td key={`${row.id}-${index}`} className="px-5 py-4">
+                        {cell}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

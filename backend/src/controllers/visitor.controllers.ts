@@ -551,7 +551,7 @@ export const getAllVisitors = async (req: Request, res: Response) => {
       .populate("visitTo", "flatNumber block floor")
       .populate("resident", "name email phoneNumber")
       .populate("allowedBy", "name")
-      .sort({ createdAt: -1 });
+      .sort({ updatedAt: -1 });
 
     return res.status(200).json({
       success: true,

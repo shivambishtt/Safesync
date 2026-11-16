@@ -68,6 +68,7 @@ import {
   registerVisitor,
   rejectVisitorEntry,
 } from "../controllers/visitor.controllers";
+import { getAllSecurityGuards } from "../controllers/security.controllers";
 
 const authRouter = Router();
 const userRouter = Router();
@@ -76,6 +77,14 @@ const adminRouter = Router();
 const flatRouter = Router();
 const complaintRouter = Router();
 const visitorRouter = Router();
+const securityRouter = Router();
+
+securityRouter.get(
+  "/security/guards",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getAllSecurityGuards,
+);
 
 authRouter.post("/register", validate(registerValidation), register);
 authRouter.post("/login", validate(loginValidation), login);
@@ -115,6 +124,13 @@ userRouter.get(
 
 userRouter.get(
   "/users/societies/residents",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.RESIDENT),
+  viewSocietyResidents,
+);
+
+userRouter.get(
+  "/users/societies/:societyId/residents",
   verifyJWT,
   authorize(Role.SECRETARY, Role.RESIDENT),
   viewSocietyResidents,
@@ -317,13 +333,6 @@ visitorRouter.patch(
   checkOutVisitor,
 );
 
-visitorRouter.get(
-  "/:visitorId",
-  verifyJWT,
-  authorize(Role.SECRETARY, Role.SECURITY),
-  getVisitorById,
-);
-
 visitorRouter.get("/", verifyJWT, authorize(Role.SECRETARY), getAllVisitors);
 
 visitorRouter.get(
@@ -354,6 +363,13 @@ visitorRouter.get(
   getVisitorHistory,
 );
 
+visitorRouter.get(
+  "/:visitorId",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.SECURITY),
+  getVisitorById,
+);
+
 export {
   authRouter,
   userRouter,
@@ -362,4 +378,5 @@ export {
   flatRouter,
   complaintRouter,
   visitorRouter,
+  securityRouter
 };

@@ -40,13 +40,10 @@ interface DashboardData {
 
 interface ApiResult<T> {
   success: boolean;
+  message?: string;
   flats?: T;
   visitors?: T;
   totalVisitors?: number;
-  visitorStats?: {
-    pending: number;
-    checkedIn: number;
-  };
 }
 
 const emptyDashboard: DashboardData = {
@@ -60,12 +57,16 @@ async function getJson<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: "include",
   });
+  const result = (await response.json()) as T & {
+    success?: boolean;
+    message?: string;
+  };
 
-  if (!response.ok) {
-    throw new Error(`Request failed (${response.status})`);
+  if (!response.ok || result.success === false) {
+    throw new Error(result.message || `Request failed (${response.status})`);
   }
 
-  return response.json() as Promise<T>;
+  return result;
 }
 
 function formatDate(date: string) {
@@ -125,14 +126,24 @@ export default function SecretaryDashboard() {
     const loadDashboard = async () => {
       const results = await Promise.allSettled([
         getJson<ApiResult<Flat[]>>(`/societies/${societyId}/flats`),
-        getJson<ApiResult<Visitor[]>>(`/visitor/`),
-        getJson<ApiResult<never>>(`/visitor/stats`),
+        getJson<ApiResult<Visitor[]>>(`/`),
+        getJson<ApiResult<Visitor[]>>(`/pending`),
       ]);
 
       if (!isCurrent) return;
 
-      const [flatsResult, visitorsResult, statsResult] = results;
+      const [flatsResult, visitorsResult, pendingVisitorsResult] = results;
       const failed = results.some((result) => result.status === "rejected");
+      const requestNames = ["Flats", "Recent visitors", "Pending visitors"];
+      const requestErrors = results.flatMap((result, index) => {
+        if (result.status !== "rejected") return [];
+
+        const message =
+          result.reason instanceof Error
+            ? result.reason.message
+            : "Request failed";
+        return [`${requestNames[index]}: ${message}`];
+      });
       const flats =
         flatsResult.status === "fulfilled" && flatsResult.value.success
           ? (flatsResult.value.flats as Flat[] | undefined) ?? []
@@ -141,20 +152,23 @@ export default function SecretaryDashboard() {
         visitorsResult.status === "fulfilled" && visitorsResult.value.success
           ? (visitorsResult.value.visitors as Visitor[] | undefined) ?? []
           : [];
-      const visitorStats =
-        statsResult.status === "fulfilled" && statsResult.value.success
-          ? statsResult.value.visitorStats
-          : undefined;
+      const pendingVisitorCount =
+        pendingVisitorsResult.status === "fulfilled" &&
+        pendingVisitorsResult.value.success
+          ? pendingVisitorsResult.value.totalVisitors ?? 0
+          : 0;
 
       setData({
         flats,
         visitors: visitors.slice(0, 5),
-        pendingVisitors: visitorStats?.pending ?? 0,
-        checkedInVisitors: visitorStats?.checkedIn ?? 0,
+        pendingVisitors: pendingVisitorCount,
+        checkedInVisitors: visitors.filter(
+          (visitor) => visitor.visitStatus === "CHECKED_IN",
+        ).length,
       });
       setLoadError(
         failed
-          ? "Some dashboard information could not be loaded. You can still use the sections that are available."
+          ? requestErrors.join(" · ")
           : "",
       );
       setLoading(false);

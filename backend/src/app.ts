@@ -11,6 +11,7 @@ import {
   flatRouter,
   complaintRouter,
   visitorRouter,
+  securityRouter,
 } from "./routes/user.routes";
 
 const app: Application = express();
@@ -32,5 +33,6 @@ app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/", flatRouter);
 app.use("/api/v1/", complaintRouter);
 app.use("/api/v1/", visitorRouter);
+app.use("/api/v1/", securityRouter);
 
 export default app;

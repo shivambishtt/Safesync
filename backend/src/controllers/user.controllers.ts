@@ -198,7 +198,7 @@ export const viewSocietyResidents = async (req: Request, res: Response) => {
         $ne: null,
       },
     })
-      .select("flatNumber owner floor society flatStatus")
+      .select("flatNumber owner block floor society flatStatus")
       .populate({
         path: "owner",
         select: "name email phoneNumber",

@@ -203,7 +203,13 @@ export const getAllComplaints = async (req: Request, res: Response) => {
     const complaints = await Complaint.find({
       society: society._id,
     })
-      .select("_id")
+      .select(
+        "title description category status priority flat registeredBy assignedTo resolvedBy estimatedClosureTime resolvedAt createdAt updatedAt",
+      )
+      .populate("flat", "flatNumber block")
+      .populate("registeredBy", "name email")
+      .populate("assignedTo", "name")
+      .populate("resolvedBy", "name")
       .sort({
         createdAt: -1,
       })
