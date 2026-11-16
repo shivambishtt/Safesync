@@ -5,11 +5,20 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {UserAvatar} from "../components/UserAvatar";
 
+const dashboardPaths: Record<string, string> = {
+  SUPER_ADMIN: "/super-admin/dashboard",
+  SECRETARY: "/secretary/dashboard",
+  RESIDENT: "/resident/dashboard",
+  SECURITY: "/security/dashboard",
+  MAINTENANCE: "/maintenance/dashboard",
+};
+
 export default function Navbar() {
   const { session, refreshSession } = useAuth();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const dashboardPath = dashboardPaths[session.user?.role ?? ""] ?? "/";
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -72,7 +81,7 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="navbar-actions">
-              <Link to="/dashboard">
+              <Link to={dashboardPath}>
                 <Button className="btn-filled bg-[#0c8c5e] text-black">
                   Dashboard
                 </Button>

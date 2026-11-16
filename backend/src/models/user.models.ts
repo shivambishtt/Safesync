@@ -28,6 +28,7 @@ interface User extends Document {
   applicationStatus: ApplicationStatus;
   isVerified: boolean;
   isActive: boolean;
+  isAvailable: boolean;
   code: string | null;
   verificationCodeExpiry: Date | null;
   passwordResetToken?: string;
@@ -101,6 +102,13 @@ const userSchema = new mongoose.Schema<User>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    isAvailable: {
+      type: Boolean,
+      default: function (this: User) {
+        return this.role === Role.MAINTENANCE;
+      },
     },
 
     code: {

@@ -7,6 +7,7 @@ import {
   ClipboardList,
   UserRoundCheck,
   UserRound,
+  CheckCircle2,
   Settings,
   X,
 } from "lucide-react";
@@ -46,6 +47,7 @@ const navigation = {
   MAINTENANCE: [
     { name: "Overview", path: "/maintenance/dashboard", icon: LayoutDashboard },
     { name: "Assigned Complaints", path: "/maintenance/complaints", icon: ClipboardList },
+    { name: "Completed Work", path: "/maintenance/completed", icon: CheckCircle2 },
     { name: "Profile", path: "/profile", icon: UserRound },
   ],
 };

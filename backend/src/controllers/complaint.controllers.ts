@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import {
   Complaint,
-  ComplaintCategory,
-  ComplaintPriority,
   ComplaintStatus,
 } from "../models/complaint.models";
 import { Role, User } from "../models/user.models";
@@ -155,6 +153,41 @@ export const getComplaint = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error occured while fetching complaint detail", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getMyComplaints = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized request",
+      });
+    }
+
+    const complaints = await Complaint.find({ registeredBy: userId })
+      .select(
+        "title description category status priority flat assignedTo estimatedClosureTime resolvedAt resolvedBy createdAt updatedAt",
+      )
+      .populate("flat", "flatNumber block floor")
+      .populate("assignedTo", "name")
+      .populate("resolvedBy", "name")
+      .sort({ updatedAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Resident complaints fetched successfully",
+      totalComplaints: complaints.length,
+      complaints,
+    });
+  } catch (error) {
+    console.error("Get resident complaints error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -336,7 +369,7 @@ export const assignStaff = async (req: Request, res: Response) => {
     }
 
     const complaint = await Complaint.findById(complaintId)
-      .select("society status")
+      .select("society status category priority")
       .populate({
         path: "society",
         select: "secretary",
@@ -359,10 +392,15 @@ export const assignStaff = async (req: Request, res: Response) => {
       });
     }
 
-    if (complaint.status !== ComplaintStatus.OPEN) {
+    const assignableStatuses = [
+      ComplaintStatus.PENDING,
+      ComplaintStatus.OPEN,
+    ];
+
+    if (!assignableStatuses.includes(complaint.status)) {
       return res.status(409).json({
         success: false,
-        message: "Complaint is not open for assignment",
+        message: "Complaint is not awaiting assignment",
       });
     }
 
@@ -371,12 +409,12 @@ export const assignStaff = async (req: Request, res: Response) => {
     const staff = await User.findOneAndUpdate(
       {
         role: Role.MAINTENANCE,
-        isAvailable: true,
+        isAvailable: { $ne: false },
       },
       {
         isAvailable: false,
       },
-      { new: true, session },
+      { returnDocument: "after", session },
     );
 
     if (!staff) {
@@ -396,7 +434,7 @@ export const assignStaff = async (req: Request, res: Response) => {
     const updatedComplaint = await Complaint.findOneAndUpdate(
       {
         _id: complaintId,
-        status: ComplaintStatus.OPEN,
+        status: complaint.status,
       },
       {
         assignedTo: staff._id,
@@ -404,7 +442,7 @@ export const assignStaff = async (req: Request, res: Response) => {
         status: ComplaintStatus.ASSIGNED,
         estimatedClosureTime: estimatedTime,
       },
-      { new: true, session },
+      { returnDocument: "after", session },
     );
 
     if (!updatedComplaint) {
@@ -448,25 +486,33 @@ export const checkAssignedComplaints = async (req: Request, res: Response) => {
       });
     }
 
-    const assignedComplaints = await Complaint.find({
-      assignedTo: user.id,
-      status: ComplaintStatus.ASSIGNED,
-    })
-      .select("-_id -assignedTo -resolvedBy -resolvedAt")
-      .sort({ createdAt: 1 })
-      .lean();
-
-    if (assignedComplaints.length === 0) {
-      return res.status(200).json({
-        success: false,
-        message: "No assigned complaints for this user",
-      });
-    }
+    const [assignedComplaints, completedComplaints] = await Promise.all([
+      Complaint.find({
+        assignedTo: user.id,
+        status: { $in: [ComplaintStatus.ASSIGNED, ComplaintStatus.IN_PROGRESS] },
+      })
+        .select("title description category status priority flat estimatedClosureTime createdAt updatedAt")
+        .populate("flat", "flatNumber block")
+        .sort({ updatedAt: -1 })
+        .lean(),
+      Complaint.find({
+        assignedTo: user.id,
+        status: { $in: [ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED] },
+      })
+        .select("title description category status priority flat estimatedClosureTime resolvedAt resolvedBy createdAt updatedAt")
+        .populate("flat", "flatNumber block")
+        .populate("resolvedBy", "name")
+        .sort({ resolvedAt: -1, updatedAt: -1 })
+        .lean(),
+    ]);
 
     return res.status(200).json({
       success: true,
-      message: "Assigned complaints fetched successfully",
+      message: "Maintenance complaints fetched successfully",
       assignedComplaints,
+      completedComplaints,
+      totalAssignedComplaints: assignedComplaints.length,
+      totalCompletedComplaints: completedComplaints.length,
     });
   } catch (error) {
     console.error("Error occurred while fetching assigned complaints", error);

@@ -28,6 +28,7 @@ const pageTitles: Record<string, string> = {
 
   "/maintenance/dashboard": "Dashboard",
   "/maintenance/complaints": "Assigned Complaints",
+  "/maintenance/completed": "Completed Work",
 
   "/profile": "My Profile",
   "/settings": "Settings",

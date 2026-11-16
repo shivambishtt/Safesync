@@ -17,6 +17,13 @@ import SecurityVisitorsPage, {
   SecurityVisitorHistoryPage,
 } from "./pages/security/SecurityVisitorsPage.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
+import ResidentDashboard from "./pages/resident/ResidentDashboard.tsx";
+import ResidentVisitorsPage from "./pages/resident/ResidentVisitorsPage.tsx";
+import ResidentComplaintsPage from "./pages/resident/ResidentComplaintsPage.tsx";
+import ResidentFlatPage from "./pages/resident/ResidentFlatPage.tsx";
+import MaintenanceDashboard from "./pages/maintenance/MaintenanceDashboard.tsx";
+import MaintenanceComplaintsPage from "./pages/maintenance/MaintenanceComplaintsPage.tsx";
+import MaintenanceCompletedPage from "./pages/maintenance/MaintenanceCompletedPage.tsx";
 
 function SecretaryDashboardRoute() {
   const { session } = useAuth();
@@ -56,6 +63,50 @@ function SecurityDashboardRoute() {
   }
 
   if (session.user?.role !== "SECURITY") {
+    return <Navigate to="/" replace />;
+  }
+
+  return <DashboardLayout />;
+}
+
+function ResidentDashboardRoute() {
+  const { session } = useAuth();
+
+  if (session.loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F2F2F2] text-sm text-gray-600">
+        Loading your dashboard...
+      </div>
+    );
+  }
+
+  if (!session.isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (session.user?.role !== "RESIDENT") {
+    return <Navigate to="/" replace />;
+  }
+
+  return <DashboardLayout />;
+}
+
+function MaintenanceDashboardRoute() {
+  const { session } = useAuth();
+
+  if (session.loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F2F2F2] text-sm text-gray-600">
+        Loading your dashboard...
+      </div>
+    );
+  }
+
+  if (!session.isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (session.user?.role !== "MAINTENANCE") {
     return <Navigate to="/" replace />;
   }
 
@@ -146,6 +197,54 @@ const router = createBrowserRouter([
       {
         path: "history",
         element: <SecurityVisitorHistoryPage />,
+      },
+    ],
+  },
+  {
+    path: "/resident",
+    element: <ResidentDashboardRoute />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: <ResidentDashboard />,
+      },
+      {
+        path: "visitors",
+        element: <ResidentVisitorsPage />,
+      },
+      {
+        path: "complaints",
+        element: <ResidentComplaintsPage />,
+      },
+      {
+        path: "flat",
+        element: <ResidentFlatPage />,
+      },
+    ],
+  },
+  {
+    path: "/maintenance",
+    element: <MaintenanceDashboardRoute />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: <MaintenanceDashboard />,
+      },
+      {
+        path: "complaints",
+        element: <MaintenanceComplaintsPage />,
+      },
+      {
+        path: "completed",
+        element: <MaintenanceCompletedPage />,
       },
     ],
   },

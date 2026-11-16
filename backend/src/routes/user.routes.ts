@@ -48,6 +48,7 @@ import {
 import {
   registerComplaint,
   getComplaint,
+  getMyComplaints,
   getAllComplaints,
   getComplaintByFilter,
   assignStaff,
@@ -254,6 +255,13 @@ complaintRouter.post(
   verifyJWT,
   authorize(Role.RESIDENT, Role.SECRETARY),
   registerComplaint,
+);
+
+complaintRouter.get(
+  "/my-complaints",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  getMyComplaints,
 );
 
 complaintRouter.get(
