@@ -1,4 +1,9 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 interface User {
   _id: string;
@@ -25,7 +30,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [session, setSession] = useState<Session>({
     user: null,
     isAuthenticated: false,
@@ -34,10 +43,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshSession = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/users/get-data", {
-        method: "GET",
-        credentials: "include",
-      });
+      const response = await fetch(
+        "http://localhost:3000/api/v1/user",
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
 
       if (!response.ok) {
         setSession({
@@ -45,11 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isAuthenticated: false,
           loading: false,
         });
-
         return;
       }
 
       const data = await response.json();
+
       setSession({
         user: data.user,
         isAuthenticated: true,
@@ -71,12 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider
-      value={{
-        session,
-        refreshSession,
-      }}
-    >
+    <AuthContext.Provider value={{ session, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );
