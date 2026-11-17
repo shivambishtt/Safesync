@@ -22,6 +22,23 @@ export const sendVerificationEmail = async (email: string, code: string) => {
   return data;
 };
 
+export const sendEmailChangeVerificationEmail = async (
+  email: string,
+  code: string,
+) => {
+  const html = await render(VerificationEmail({ code, purpose: "email-change" }));
+
+  const { data, error } = await resend.emails.send({
+    from: process.env.RESEND_EMAIL_FROM!,
+    to: email,
+    subject: "Confirm your SafeSync email address",
+    html,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
 export const sendPasswordResetEmail = async (
   email: string,
   resetUrl: string,

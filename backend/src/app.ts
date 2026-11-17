@@ -12,6 +12,9 @@ import {
   complaintRouter,
   visitorRouter,
   securityRouter,
+  noticeRouter,
+  propertyListingRouter,
+  maintenanceBillingRouter,
 } from "./routes/user.routes";
 
 const app: Application = express();
@@ -32,6 +35,9 @@ app.use("/api/v1/", societyRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/", flatRouter);
 app.use("/api/v1/", complaintRouter);
+app.use("/api/v1/", noticeRouter);
+app.use("/api/v1/", propertyListingRouter);
+app.use("/api/v1/", maintenanceBillingRouter);
 app.use("/api/v1/", visitorRouter);
 app.use("/api/v1/", securityRouter);
 

@@ -12,6 +12,9 @@ import { validate } from "../middlewares/validate";
 import {
   registerValidation,
   loginValidation,
+  changePasswordValidation,
+  requestEmailChangeValidation,
+  verifyEmailChangeValidation,
 } from "../validations/user.validations";
 import { createSocietyValidation } from "../validations/society.validations";
 import { verifyJWT } from "../middlewares/authenticate";
@@ -21,6 +24,8 @@ import {
   getData,
   getUserFlat,
   updateProfile,
+  requestEmailChange,
+  verifyEmailChange,
   getUserSociety,
   viewSocietyResidents,
 } from "../controllers/user.controllers";
@@ -57,7 +62,7 @@ import {
   markComplaintResolve,
 } from "../controllers/complaint.controllers";
 import {
-  allowVisitorEntry,
+  approveVisitorByResident,
   checkInVisitor,
   checkOutVisitor,
   getAllVisitors,
@@ -66,10 +71,57 @@ import {
   getVisitorById,
   getVisitorHistory,
   getVisitorStats,
+  getSecurityVisitorDestinations,
   registerVisitor,
-  rejectVisitorEntry,
+  rejectVisitorByResident,
 } from "../controllers/visitor.controllers";
 import { getAllSecurityGuards } from "../controllers/security.controllers";
+import {
+  checkInSecurityGuard,
+  checkOutSecurityGuard,
+  getMySecurityAttendance,
+  getSocietySecurityAttendance,
+} from "../controllers/securityAttendance.controllers";
+import {
+  closePropertyListing,
+  createPropertyListing,
+  getMyPropertyListings,
+  getSocietyPropertyListings,
+  updatePropertyListing,
+} from "../controllers/propertyListing.controllers";
+import {
+  createPropertyListingValidation,
+  updatePropertyListingValidation,
+} from "../validations/propertyListing.validations";
+import {
+  generateMaintenanceBills,
+  getMaintenanceBillingPlan,
+  getMyMaintenanceBills,
+  getSocietyMaintenanceBills,
+  recordMaintenancePayment,
+  saveMaintenanceBillingPlan,
+} from "../controllers/maintenanceBilling.controllers";
+import {
+  recordMaintenancePaymentValidation,
+  maintenancePlanValidation,
+} from "../validations/maintenanceBilling.validations";
+import {
+  archiveNotice,
+  createNotice,
+  getNoticeById,
+  getPublishedNoticesForResident,
+  getSocietyNotices,
+  publishNotice,
+  setNoticePinned,
+  unpublishNotice,
+  updateNotice,
+} from "../controllers/notice.controllers";
+import { validate as validateNotice } from "../middlewares/validate";
+import {
+  createNoticeValidation,
+  noticePinValidation,
+  updateNoticeValidation,
+} from "../validations/notice.validations";
 
 const authRouter = Router();
 const userRouter = Router();
@@ -79,12 +131,111 @@ const flatRouter = Router();
 const complaintRouter = Router();
 const visitorRouter = Router();
 const securityRouter = Router();
+const noticeRouter = Router();
+const propertyListingRouter = Router();
+const maintenanceBillingRouter = Router();
+
+maintenanceBillingRouter.get(
+  "/maintenance/billing/plan",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getMaintenanceBillingPlan,
+);
+maintenanceBillingRouter.put(
+  "/maintenance/billing/plan",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  validate(maintenancePlanValidation),
+  saveMaintenanceBillingPlan,
+);
+maintenanceBillingRouter.post(
+  "/maintenance/billing/generate",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  generateMaintenanceBills,
+);
+maintenanceBillingRouter.get(
+  "/maintenance/billing/bills",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getSocietyMaintenanceBills,
+);
+maintenanceBillingRouter.post(
+  "/maintenance/billing/bills/:billId/payments",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  validate(recordMaintenancePaymentValidation),
+  recordMaintenancePayment,
+);
+maintenanceBillingRouter.get(
+  "/maintenance/my-bills",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  getMyMaintenanceBills,
+);
 
 securityRouter.get(
   "/security/guards",
   verifyJWT,
   authorize(Role.SECRETARY),
   getAllSecurityGuards,
+);
+securityRouter.post(
+  "/security/attendance/check-in",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  checkInSecurityGuard,
+);
+securityRouter.post(
+  "/security/attendance/check-out",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  checkOutSecurityGuard,
+);
+securityRouter.get(
+  "/security/attendance/me",
+  verifyJWT,
+  authorize(Role.SECURITY),
+  getMySecurityAttendance,
+);
+securityRouter.get(
+  "/security/attendance",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getSocietySecurityAttendance,
+);
+
+propertyListingRouter.post(
+  "/property-listings",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  validate(createPropertyListingValidation),
+  createPropertyListing,
+);
+propertyListingRouter.get(
+  "/property-listings",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  getSocietyPropertyListings,
+);
+propertyListingRouter.get(
+  "/property-listings/mine",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  getMyPropertyListings,
+);
+propertyListingRouter.patch(
+  "/property-listings/:listingId",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  validate(updatePropertyListingValidation),
+  updatePropertyListing,
+);
+propertyListingRouter.patch(
+  "/property-listings/:listingId/close",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  closePropertyListing,
 );
 
 authRouter.post("/register", validate(registerValidation), register);
@@ -93,7 +244,8 @@ authRouter.post("/logout", logout);
 authRouter.patch(
   "/change-password",
   verifyJWT,
-  authorize(Role.RESIDENT),
+  authorize(Role.SECRETARY, Role.RESIDENT, Role.SECURITY, Role.MAINTENANCE),
+  validate(changePasswordValidation),
   changePassword,
 );
 authRouter.post("/refresh-token", refresh_token);
@@ -105,8 +257,23 @@ userRouter.get("/user", verifyJWT, getData);
 userRouter.patch(
   "/users/update",
   verifyJWT,
-  authorize(Role.SECRETARY, Role.RESIDENT),
+  authorize(Role.SECRETARY, Role.RESIDENT, Role.SECURITY, Role.MAINTENANCE),
   updateProfile,
+);
+
+userRouter.post(
+  "/users/email-change/request",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.RESIDENT, Role.SECURITY, Role.MAINTENANCE),
+  validate(requestEmailChangeValidation),
+  requestEmailChange,
+);
+userRouter.post(
+  "/users/email-change/verify",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.RESIDENT, Role.SECURITY, Role.MAINTENANCE),
+  validate(verifyEmailChangeValidation),
+  verifyEmailChange,
 );
 
 userRouter.get(
@@ -313,18 +480,25 @@ visitorRouter.post(
   registerVisitor,
 );
 
-visitorRouter.patch(
-  "/:visitorId/approve",
+visitorRouter.get(
+  "/visitor-destinations",
   verifyJWT,
   authorize(Role.SECURITY),
-  allowVisitorEntry,
+  getSecurityVisitorDestinations,
 );
 
 visitorRouter.patch(
-  "/:visitorId/reject",
+  "/my-visitors/:visitorId/approve",
   verifyJWT,
-  authorize(Role.SECURITY),
-  rejectVisitorEntry,
+  authorize(Role.RESIDENT),
+  approveVisitorByResident,
+);
+
+visitorRouter.patch(
+  "/my-visitors/:visitorId/reject",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  rejectVisitorByResident,
 );
 
 visitorRouter.patch(
@@ -378,6 +552,64 @@ visitorRouter.get(
   getVisitorById,
 );
 
+noticeRouter.post(
+  "/notices",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  validateNotice(createNoticeValidation),
+  createNotice,
+);
+noticeRouter.get(
+  "/notices/manage",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  getSocietyNotices,
+);
+noticeRouter.get(
+  "/notices",
+  verifyJWT,
+  authorize(Role.RESIDENT),
+  getPublishedNoticesForResident,
+);
+noticeRouter.get(
+  "/notices/:noticeId",
+  verifyJWT,
+  authorize(Role.SECRETARY, Role.RESIDENT),
+  getNoticeById,
+);
+noticeRouter.patch(
+  "/notices/:noticeId",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  validateNotice(updateNoticeValidation),
+  updateNotice,
+);
+noticeRouter.patch(
+  "/notices/:noticeId/publish",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  publishNotice,
+);
+noticeRouter.patch(
+  "/notices/:noticeId/unpublish",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  unpublishNotice,
+);
+noticeRouter.patch(
+  "/notices/:noticeId/archive",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  archiveNotice,
+);
+noticeRouter.patch(
+  "/notices/:noticeId/pin",
+  verifyJWT,
+  authorize(Role.SECRETARY),
+  validateNotice(noticePinValidation),
+  setNoticePinned,
+);
+
 export {
   authRouter,
   userRouter,
@@ -386,5 +618,8 @@ export {
   flatRouter,
   complaintRouter,
   visitorRouter,
-  securityRouter
+  securityRouter,
+  noticeRouter,
+  propertyListingRouter,
+  maintenanceBillingRouter,
 };

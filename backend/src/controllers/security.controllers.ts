@@ -69,7 +69,7 @@ export const addSecurityGuard = async (req: Request, res: Response) => {
     });
 
     const safeGuard = await User.findById(guard._id).select(
-      "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry",
+      "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry -emailChangeCode -emailChangeCodeExpiry -pendingEmail",
     );
 
     return res.status(201).json({
@@ -119,7 +119,7 @@ export const getAllSecurityGuards = async (req: Request, res: Response) => {
       society: society._id,
     })
       .select(
-        "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry",
+        "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry -emailChangeCode -emailChangeCodeExpiry -pendingEmail",
       )
       .sort({ createdAt: -1 });
 
@@ -178,7 +178,7 @@ export const getSecurityGuardById = async (
       role: Role.SECURITY,
       society: society._id,
     }).select(
-      "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry",
+      "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry -emailChangeCode -emailChangeCodeExpiry -pendingEmail",
     );
 
     if (!guard) {
@@ -303,7 +303,7 @@ export const updateSecurityGuard = async (
     await guard.save();
 
     const safeGuard = await User.findById(guard._id).select(
-      "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry",
+      "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry -emailChangeCode -emailChangeCodeExpiry -pendingEmail",
     );
 
     return res.status(200).json({
@@ -380,7 +380,7 @@ export const removeSecurityGuard = async (
         runValidators: true,
       },
     ).select(
-      "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry",
+      "-password -refreshToken -code -passwordResetToken -passwordResetTokenExpiry -verificationCodeExpiry -emailChangeCode -emailChangeCodeExpiry -pendingEmail",
     );
 
     if (!guard) {

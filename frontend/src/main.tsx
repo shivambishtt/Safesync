@@ -24,6 +24,16 @@ import ResidentFlatPage from "./pages/resident/ResidentFlatPage.tsx";
 import MaintenanceDashboard from "./pages/maintenance/MaintenanceDashboard.tsx";
 import MaintenanceComplaintsPage from "./pages/maintenance/MaintenanceComplaintsPage.tsx";
 import MaintenanceCompletedPage from "./pages/maintenance/MaintenanceCompletedPage.tsx";
+import SecretaryNoticesPage from "./pages/notices/SecretaryNoticesPage.tsx";
+import ResidentNoticesPage, {
+  ResidentNoticeDetailPage,
+} from "./pages/notices/ResidentNoticesPage.tsx";
+import SecurityAttendancePage from "./pages/security/SecurityAttendancePage.tsx";
+import SecretaryAttendancePage from "./pages/secretary/SecretaryAttendancePage.tsx";
+import AboutPage from "./pages/AboutPage.tsx";
+import ResidentMarketplacePage from "./pages/resident/ResidentMarketplacePage.tsx";
+import SecretaryMaintenanceBillingPage from "./pages/maintenanceBilling/SecretaryMaintenanceBillingPage.tsx";
+import ResidentMaintenanceBillsPage from "./pages/maintenanceBilling/ResidentMaintenanceBillsPage.tsx";
 
 function SecretaryDashboardRoute() {
   const { session } = useAuth();
@@ -145,6 +155,10 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
+    path: "/about",
+    element: <AboutPage />,
+  },
+  {
     path: "/secretary",
     element: <SecretaryDashboardRoute />,
     children: [
@@ -169,12 +183,24 @@ const router = createBrowserRouter([
         element: <SecretarySectionPage section="security" />,
       },
       {
+        path: "security-attendance",
+        element: <SecretaryAttendancePage />,
+      },
+      {
+        path: "maintenance-billing",
+        element: <SecretaryMaintenanceBillingPage />,
+      },
+      {
         path: "complaints",
         element: <SecretarySectionPage section="complaints" />,
       },
       {
         path: "visitors",
         element: <SecretarySectionPage section="visitors" />,
+      },
+      {
+        path: "notices",
+        element: <SecretaryNoticesPage />,
       },
     ],
   },
@@ -197,6 +223,10 @@ const router = createBrowserRouter([
       {
         path: "history",
         element: <SecurityVisitorHistoryPage />,
+      },
+      {
+        path: "attendance",
+        element: <SecurityAttendancePage />,
       },
     ],
   },
@@ -223,6 +253,22 @@ const router = createBrowserRouter([
       {
         path: "flat",
         element: <ResidentFlatPage />,
+      },
+      {
+        path: "maintenance",
+        element: <ResidentMaintenanceBillsPage />,
+      },
+      {
+        path: "marketplace",
+        element: <ResidentMarketplacePage />,
+      },
+      {
+        path: "notices",
+        element: <ResidentNoticesPage />,
+      },
+      {
+        path: "notices/:noticeId",
+        element: <ResidentNoticeDetailPage />,
       },
     ],
   },

@@ -29,7 +29,7 @@ export const getPendingSecretaries = async (req: Request, res: Response) => {
     }
 
     const pendingRequests = await User.find(filter)
-      .select("-password -refreshToken")
+      .select("-password -refreshToken -code -verificationCodeExpiry -emailChangeCode -emailChangeCodeExpiry -pendingEmail -passwordResetToken -passwordResetTokenExpiry")
       .sort({ createdAt: -1 });
 
     if (!pendingRequests || pendingRequests.length === 0) {
@@ -112,7 +112,7 @@ export const revokeSecretary = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.findById(id).select("-refreshToken -password");
+    const user = await User.findById(id).select("-refreshToken -password -code -verificationCodeExpiry -emailChangeCode -emailChangeCodeExpiry -pendingEmail -passwordResetToken -passwordResetTokenExpiry");
 
     if (!user) {
       return res.status(404).json({
@@ -164,7 +164,7 @@ export const disapproveSecretary = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.findById(id).select("-refreshToken -password");
+    const user = await User.findById(id).select("-refreshToken -password -code -verificationCodeExpiry -emailChangeCode -emailChangeCodeExpiry -pendingEmail -passwordResetToken -passwordResetTokenExpiry");
 
     if (!user) {
       return res.status(404).json({

@@ -23,9 +23,14 @@ export const calculateEstimatedClosureTime = (
   priority: ComplaintPriority,
   startTime: Date = new Date(),
 ): Date => {
-  const baseHours = categoryDuration[category] ?? categoryDuration[ComplaintCategory.OTHER];
-  const multiplier = priorityMultiplier[priority] ?? priorityMultiplier[ComplaintPriority.MEDIUM];
-  const validStartTime = Number.isNaN(startTime.getTime()) ? new Date() : startTime;
+  const baseHours =
+    categoryDuration[category] ?? categoryDuration[ComplaintCategory.OTHER];
+  const multiplier =
+    priorityMultiplier[priority] ??
+    priorityMultiplier[ComplaintPriority.MEDIUM];
+  const validStartTime = Number.isNaN(startTime.getTime())
+    ? new Date()
+    : startTime;
 
   const estimatedTime = baseHours * multiplier;
 

@@ -10,10 +10,12 @@ import {
 
 interface VerificationEmailProps {
   code: string;
+  purpose?: "account" | "email-change";
 }
 
 export const VerificationEmail = ({
   code,
+  purpose = "account",
 }: VerificationEmailProps) => {
   return (
     <Html>
@@ -32,10 +34,12 @@ export const VerificationEmail = ({
             margin: "0 auto",
           }}
         >
-          <Heading>Welcome to SafeSync!</Heading>
+          <Heading>{purpose === "email-change" ? "Confirm your new SafeSync email" : "Welcome to SafeSync!"}</Heading>
 
           <Text>
-            Use the verification code below to verify your email address.
+            {purpose === "email-change"
+              ? "Use this code to confirm the new email address on your SafeSync account."
+              : "Use the verification code below to verify your email address."}
           </Text>
 
           <Heading style={{ letterSpacing: "8px" }}>{code}</Heading>

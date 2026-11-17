@@ -44,18 +44,6 @@ const updateProfileValidation = z
       .min(2, "Name must be at least 2 characters")
       .optional(),
 
-    email: z
-      .string()
-      .trim()
-      .toLowerCase()
-      .email("Please provide a valid email address")
-      .optional(),
-
-    password: z
-      .string()
-      .min(6, "Password must be at least 6 characters")
-      .optional(),
-
     phoneNumber: z
       .string()
       .regex(/^[6-9]\d{9}$/, "Please provide a valid phone number")
@@ -66,4 +54,29 @@ const updateProfileValidation = z
     message: "Provide atleast one field to update",
   });
 
-export { registerValidation, loginValidation, updateProfileValidation };
+const changePasswordValidation = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(6, "New password must be at least 6 characters"),
+  })
+  .strict();
+
+const requestEmailChangeValidation = z
+  .object({
+    email: z.string().trim().toLowerCase().email("Please provide a valid email address"),
+    currentPassword: z.string().min(1, "Current password is required"),
+  })
+  .strict();
+
+const verifyEmailChangeValidation = z
+  .object({ code: z.string().regex(/^\d{6}$/, "Enter the 6 digit verification code") })
+  .strict();
+
+export {
+  registerValidation,
+  loginValidation,
+  updateProfileValidation,
+  changePasswordValidation,
+  requestEmailChangeValidation,
+  verifyEmailChangeValidation,
+};

@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import {UserAvatar} from "../components/UserAvatar";
+import { UserAvatar } from "../components/UserAvatar";
+import { useLogout } from "../lib/useLogout";
 
 const dashboardPaths: Record<string, string> = {
   SUPER_ADMIN: "/super-admin/dashboard",
@@ -14,36 +15,12 @@ const dashboardPaths: Record<string, string> = {
 };
 
 export default function Navbar() {
-  const { session, refreshSession } = useAuth();
-  const navigate = useNavigate();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [logoutError, setLogoutError] = useState("");
+  const { session } = useAuth();
+  const { logout, isLoggingOut, logoutError } = useLogout();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dashboardPath = dashboardPaths[session.user?.role ?? ""] ?? "/";
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    setLogoutError("");
-
-    try {
-      const response = await fetch("http://localhost:3000/api/auth/users/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Logout failed. Please try again.");
-      }
-
-      await refreshSession();
-      navigate("/login", { replace: true });
-    } catch (error) {
-      setLogoutError(
-        error instanceof Error ? error.message : "Logout failed. Please try again.",
-      );
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <header className="navbar">
@@ -52,19 +29,35 @@ export default function Navbar() {
           SafeSync
         </Link>
 
-        <nav className="navbar-links">
-          <Link to="/" className="navbar-link">
+        <nav className="navbar-links" aria-label="Main navigation">
+          <Link to="/" className="navbar-link" onClick={closeMobileMenu}>
             Home
           </Link>
 
-          <a href="#features" className="navbar-link">
+          <Link
+            to="/#features"
+            className="navbar-link"
+            onClick={closeMobileMenu}
+          >
             Features
-          </a>
+          </Link>
 
-          <Link to="/about" className="navbar-link">
+          <Link to="/about" className="navbar-link" onClick={closeMobileMenu}>
             About Us
           </Link>
         </nav>
+
+        <button
+          type="button"
+          className="navbar-menu-toggle"
+          aria-label={
+            mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
+          }
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
 
         <div className="navbar-right">
           {!session.isAuthenticated ? (
@@ -81,6 +74,19 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="navbar-actions">
+              <button
+                type="button"
+                onClick={() => void logout()}
+                disabled={isLoggingOut}
+                aria-label={isLoggingOut ? "Logging out" : "Log out"}
+                className="navbar-logout"
+              >
+                <LogOut size={16} />
+                <span className="navbar-logout-label">
+                  {isLoggingOut ? "Logging out…" : "Log out"}
+                </span>
+              </button>
+
               <Link to={dashboardPath}>
                 <Button className="btn-filled bg-[#0c8c5e] text-black">
                   Dashboard
@@ -94,18 +100,6 @@ export default function Navbar() {
               >
                 <UserAvatar name={session.user?.name} size="md" />
               </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                aria-label={isLoggingOut ? "Logging out" : "Log out"}
-                className="navbar-logout"
-              >
-                <LogOut size={16} />
-                <span className="hidden sm:inline">
-                  {isLoggingOut ? "Logging out…" : "Log out"}
-                </span>
-              </button>
             </div>
           )}
           {logoutError && (
@@ -114,6 +108,20 @@ export default function Navbar() {
             </p>
           )}
         </div>
+
+        {mobileMenuOpen && (
+          <nav className="navbar-mobile-panel" aria-label="Mobile navigation">
+            <Link to="/" onClick={closeMobileMenu}>
+              Home
+            </Link>
+            <Link to="/#features" onClick={closeMobileMenu}>
+              Features
+            </Link>
+            <Link to="/about" onClick={closeMobileMenu}>
+              About Us
+            </Link>
+          </nav>
+        )}
       </div>
     </header>
   );

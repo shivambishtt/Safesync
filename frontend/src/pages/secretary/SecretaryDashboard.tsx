@@ -146,16 +146,16 @@ export default function SecretaryDashboard() {
       });
       const flats =
         flatsResult.status === "fulfilled" && flatsResult.value.success
-          ? (flatsResult.value.flats as Flat[] | undefined) ?? []
+          ? ((flatsResult.value.flats as Flat[] | undefined) ?? [])
           : [];
       const visitors =
         visitorsResult.status === "fulfilled" && visitorsResult.value.success
-          ? (visitorsResult.value.visitors as Visitor[] | undefined) ?? []
+          ? ((visitorsResult.value.visitors as Visitor[] | undefined) ?? [])
           : [];
       const pendingVisitorCount =
         pendingVisitorsResult.status === "fulfilled" &&
         pendingVisitorsResult.value.success
-          ? pendingVisitorsResult.value.totalVisitors ?? 0
+          ? (pendingVisitorsResult.value.totalVisitors ?? 0)
           : 0;
 
       setData({
@@ -166,11 +166,7 @@ export default function SecretaryDashboard() {
           (visitor) => visitor.visitStatus === "CHECKED_IN",
         ).length,
       });
-      setLoadError(
-        failed
-          ? requestErrors.join(" · ")
-          : "",
-      );
+      setLoadError(failed ? requestErrors.join(" · ") : "");
       setLoading(false);
     };
 
@@ -189,7 +185,9 @@ export default function SecretaryDashboard() {
     <div className="space-y-8">
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-medium text-[#0C8C5E]">Secretary workspace</p>
+          <p className="text-sm font-medium text-[#0C8C5E]">
+            Secretary workspace
+          </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#08090A] sm:text-3xl">
             Good to see you, {session.user?.name?.split(" ")[0] ?? "Secretary"}
           </h1>
@@ -216,7 +214,10 @@ export default function SecretaryDashboard() {
         </div>
       )}
 
-      <section aria-label="Society summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section
+        aria-label="Society summary"
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
         <MetricCard
           label="Total flats"
           value={loading ? "—" : data.flats.length}
@@ -248,7 +249,9 @@ export default function SecretaryDashboard() {
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 sm:px-6">
             <div>
               <h2 className="font-semibold text-[#08090A]">Recent visitors</h2>
-              <p className="mt-1 text-sm text-gray-500">Latest visitor activity in your society</p>
+              <p className="mt-1 text-sm text-gray-500">
+                Latest visitor activity in your society
+              </p>
             </div>
             <Link
               to="/secretary/visitors"
@@ -261,7 +264,10 @@ export default function SecretaryDashboard() {
           {loading ? (
             <div className="space-y-4 p-6" aria-label="Loading recent visitors">
               {[0, 1, 2].map((item) => (
-                <div key={item} className="h-10 animate-pulse rounded-lg bg-gray-100" />
+                <div
+                  key={item}
+                  className="h-10 animate-pulse rounded-lg bg-gray-100"
+                />
               ))}
             </div>
           ) : data.visitors.length === 0 ? (
@@ -269,24 +275,37 @@ export default function SecretaryDashboard() {
               <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-500">
                 <Users size={20} />
               </span>
-              <p className="mt-3 text-sm font-medium text-gray-800">No visitor activity yet</p>
-              <p className="mt-1 text-sm text-gray-500">Visitor records will show here when they are added.</p>
+              <p className="mt-3 text-sm font-medium text-gray-800">
+                No visitor activity yet
+              </p>
+              <p className="mt-1 text-sm text-gray-500">
+                Visitor records will show here when they are added.
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
               {data.visitors.map((visitor) => (
-                <div key={visitor._id} className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
+                <div
+                  key={visitor._id}
+                  className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6"
+                >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-900">{visitor.name}</p>
+                    <p className="truncate text-sm font-medium text-gray-900">
+                      {visitor.name}
+                    </p>
                     <p className="mt-1 truncate text-xs text-gray-500">
-                      {visitor.purpose.toLowerCase()} · {visitor.visitTo?.block ?? "Flat"} {visitor.visitTo?.flatNumber ?? ""}
+                      {visitor.purpose.toLowerCase()} ·{" "}
+                      {visitor.visitTo?.block ?? "Flat"}{" "}
+                      {visitor.visitTo?.flatNumber ?? ""}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
                     <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium capitalize text-gray-700">
                       {visitor.visitStatus.toLowerCase().replaceAll("_", " ")}
                     </span>
-                    <p className="mt-1.5 text-xs text-gray-500">{formatDate(visitor.createdAt)}</p>
+                    <p className="mt-1.5 text-xs text-gray-500">
+                      {formatDate(visitor.createdAt)}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -300,16 +319,26 @@ export default function SecretaryDashboard() {
           </div>
           <h2 className="mt-5 text-lg font-semibold">Manage your society</h2>
           <p className="mt-2 text-sm leading-6 text-white/70">
-            Keep resident records, flats, visitor activity, and complaints organized from one workspace.
+            Keep resident records, flats, visitor activity, and complaints
+            organized from one workspace.
           </p>
           <div className="mt-6 flex flex-col gap-2">
-            <Link to="/secretary/residents" className="rounded-lg bg-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/15">
+            <Link
+              to="/secretary/residents"
+              className="rounded-lg bg-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/15"
+            >
               View residents <span className="float-right">→</span>
             </Link>
-            <Link to="/secretary/flats" className="rounded-lg bg-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/15">
+            <Link
+              to="/secretary/flats"
+              className="rounded-lg bg-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/15"
+            >
               Manage flats <span className="float-right">→</span>
             </Link>
-            <Link to="/secretary/complaints" className="rounded-lg bg-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/15">
+            <Link
+              to="/secretary/complaints"
+              className="rounded-lg bg-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/15"
+            >
               Review complaints <span className="float-right">→</span>
             </Link>
           </div>

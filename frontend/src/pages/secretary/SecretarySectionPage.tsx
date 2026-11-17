@@ -154,7 +154,9 @@ async function getJson<T>(path: string): Promise<T> {
   return result as T;
 }
 
-async function assignAvailableStaffToUnassignedComplaints(complaints: Complaint[]) {
+async function assignAvailableStaffToUnassignedComplaints(
+  complaints: Complaint[],
+) {
   let assignedCount = 0;
   let noStaffAvailable = false;
 
@@ -183,14 +185,22 @@ async function assignAvailableStaffToUnassignedComplaints(complaints: Complaint[
     // Another request may have assigned this complaint while the page loaded.
     if (response.status === 409) continue;
 
-    throw new Error(result.message || `Could not assign complaint (${response.status})`);
+    throw new Error(
+      result.message || `Could not assign complaint (${response.status})`,
+    );
   }
 
   return { assignedCount, noStaffAvailable };
 }
 
 function displayDate(value?: string | number | Date | null) {
-  if (value === null || value === undefined || value === "" || value === 0 || value === "0") {
+  if (
+    value === null ||
+    value === undefined ||
+    value === "" ||
+    value === 0 ||
+    value === "0"
+  ) {
     return "—";
   }
 
@@ -333,27 +343,28 @@ export default function SecretarySectionPage({
           }
 
           if (assignedCount > 0 || noStaffAvailable) {
-            const assignmentNotice = assignedCount > 0
-              ? `Automatically assigned ${assignedCount} complaint${assignedCount === 1 ? "" : "s"} to available maintenance staff.`
-              : "No maintenance staff are available right now. Pending complaints remain unassigned.";
+            const assignmentNotice =
+              assignedCount > 0
+                ? `Automatically assigned ${assignedCount} complaint${assignedCount === 1 ? "" : "s"} to available maintenance staff.`
+                : "No maintenance staff are available right now. Pending complaints remain unassigned.";
             if (current) setNotice(assignmentNotice);
           }
 
           nextRows = complaints.map((complaint) => ({
-              id: complaint._id,
-              cells: [
-                complaint.title,
-                complaint.registeredBy?.name || "—",
-                `${complaint.flat?.block || ""} ${complaint.flat?.flatNumber || "—"}`.trim(),
-                pretty(complaint.category),
-                pretty(complaint.priority),
-                pretty(complaint.status),
-                complaint.assignedTo?.name || "—",
-                displayDate(complaint.createdAt),
-                complaint.resolvedAt ? displayDate(complaint.resolvedAt) : "—",
-                complaint.resolvedBy?.name || "—",
-              ],
-            }));
+            id: complaint._id,
+            cells: [
+              complaint.title,
+              complaint.registeredBy?.name || "—",
+              `${complaint.flat?.block || ""} ${complaint.flat?.flatNumber || "—"}`.trim(),
+              pretty(complaint.category),
+              pretty(complaint.priority),
+              pretty(complaint.status),
+              complaint.assignedTo?.name || "—",
+              displayDate(complaint.createdAt),
+              complaint.resolvedAt ? displayDate(complaint.resolvedAt) : "—",
+              complaint.resolvedBy?.name || "—",
+            ],
+          }));
         }
 
         if (current) setRows(nextRows);
@@ -395,7 +406,10 @@ export default function SecretarySectionPage({
 
       <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {notice && (
-          <div role="status" className="m-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          <div
+            role="status"
+            className="m-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+          >
             {notice}
           </div>
         )}

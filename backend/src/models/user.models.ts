@@ -31,6 +31,9 @@ interface User extends Document {
   isAvailable: boolean;
   code: string | null;
   verificationCodeExpiry: Date | null;
+  pendingEmail: string | null;
+  emailChangeCode: string | null;
+  emailChangeCodeExpiry: Date | null;
   passwordResetToken?: string;
   passwordResetTokenExpiry?: Date;
   generateAccessToken(): string;
@@ -121,6 +124,23 @@ const userSchema = new mongoose.Schema<User>(
       default: null,
     },
 
+    pendingEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      default: null,
+    },
+
+    emailChangeCode: {
+      type: String,
+      default: null,
+    },
+
+    emailChangeCodeExpiry: {
+      type: Date,
+      default: null,
+    },
+
     passwordResetToken: {
       type: String,
       default: null,
@@ -139,6 +159,12 @@ const userSchema = new mongoose.Schema<User>(
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
+});
+
+userSchema.pre("save", async function () {
+  if (!this.isModified("emailChangeCode")) return;
+  if (!this.emailChangeCode) return;
+  this.emailChangeCode = await bcrypt.hash(this.emailChangeCode, 10);
 });
 
 userSchema.pre("save", async function () {

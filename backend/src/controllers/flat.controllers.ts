@@ -608,6 +608,13 @@ export const updateFlatOwner = async (req: Request, res: Response) => {
       });
     }
 
+    if (newOwner.role !== Role.RESIDENT) {
+      return res.status(400).json({
+        success: false,
+        message: "A flat owner must have a resident account",
+      });
+    }
+
     if (newOwner.flat) {
       return res.status(409).json({
         success: false,
@@ -627,7 +634,7 @@ export const updateFlatOwner = async (req: Request, res: Response) => {
 
     await User.findByIdAndUpdate(
       newOwner._id,
-      { flat: updatedFlat?._id },
+      { flat: updatedFlat?._id, society: updatedFlat?.society },
       { session },
     );
 

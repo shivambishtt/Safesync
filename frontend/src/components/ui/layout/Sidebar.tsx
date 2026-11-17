@@ -10,6 +10,10 @@ import {
   CheckCircle2,
   Settings,
   X,
+  Megaphone,
+  CalendarCheck,
+  Store,
+  Wallet,
 } from "lucide-react";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -25,14 +29,19 @@ const navigation = {
     { name: "Residents", path: "/secretary/residents", icon: Users },
     { name: "Flats", path: "/secretary/flats", icon: Building2 },
     { name: "Security Guards", path: "/secretary/security", icon: Shield },
+    { name: "Guard Attendance", path: "/secretary/security-attendance", icon: CalendarCheck },
+    { name: "Maintenance Billing", path: "/secretary/maintenance-billing", icon: Wallet },
     { name: "Complaints", path: "/secretary/complaints", icon: ClipboardList },
     { name: "Visitors", path: "/secretary/visitors", icon: UserRoundCheck },
+    { name: "Notice Board", path: "/secretary/notices", icon: Megaphone },
+    { name: "Profile", path: "/profile", icon: UserRound },
   ],
 
   SECURITY: [
     { name: "Overview", path: "/security/dashboard", icon: LayoutDashboard },
     { name: "Visitors", path: "/security/visitors", icon: UserRoundCheck },
     { name: "Visitor History", path: "/security/history", icon: ClipboardList },
+    { name: "My Attendance", path: "/security/attendance", icon: CalendarCheck },
     { name: "Profile", path: "/profile", icon: UserRound },
   ],
 
@@ -40,7 +49,10 @@ const navigation = {
     { name: "Overview", path: "/resident/dashboard", icon: LayoutDashboard },
     { name: "My Visitors", path: "/resident/visitors", icon: UserRoundCheck },
     { name: "Complaints", path: "/resident/complaints", icon: ClipboardList },
+    { name: "Notice Board", path: "/resident/notices", icon: Megaphone },
     { name: "My Flat", path: "/resident/flat", icon: Building2 },
+    { name: "Maintenance", path: "/resident/maintenance", icon: Wallet },
+    { name: "Marketplace", path: "/resident/marketplace", icon: Store },
     { name: "Profile", path: "/profile", icon: UserRound },
   ],
 
@@ -87,7 +99,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
             <NavLink
               key={item.path}
               to={item.path}
-              end
+              end={item.path !== "/resident/notices"}
               onClick={onClose}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors ${

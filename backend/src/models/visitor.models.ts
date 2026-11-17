@@ -23,6 +23,7 @@ interface IVisitor extends Document {
   visitTo: mongoose.Types.ObjectId;
   resident: mongoose.Types.ObjectId;
   allowedBy?: mongoose.Types.ObjectId;
+  rejectedBy?: mongoose.Types.ObjectId;
   visitStatus: VisitStatus;
   checkInTime?: Date | null;
   checkoutTime?: Date | null;
@@ -68,6 +69,12 @@ const visitorSchema = new mongoose.Schema<IVisitor>(
     },
 
     allowedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    rejectedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
