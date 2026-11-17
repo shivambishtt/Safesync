@@ -106,6 +106,7 @@ const complaintSchema = new mongoose.Schema<IComplaint>(
 );
 
 complaintSchema.index({ society: 1, status: 1, createdAt: -1 });
+complaintSchema.index({ society: 1, resolvedAt: -1 });
 
 complaintSchema.index({ assignedTo: 1, status: 1 });
 

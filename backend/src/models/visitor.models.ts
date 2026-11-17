@@ -101,4 +101,7 @@ const visitorSchema = new mongoose.Schema<IVisitor>(
   },
 );
 
+visitorSchema.index({ visitTo: 1, createdAt: -1 });
+visitorSchema.index({ visitTo: 1, checkInTime: -1 });
+
 export const Visitor = mongoose.model("Visitor", visitorSchema);

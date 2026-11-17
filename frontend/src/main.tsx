@@ -34,6 +34,7 @@ import AboutPage from "./pages/AboutPage.tsx";
 import ResidentMarketplacePage from "./pages/resident/ResidentMarketplacePage.tsx";
 import SecretaryMaintenanceBillingPage from "./pages/maintenanceBilling/SecretaryMaintenanceBillingPage.tsx";
 import ResidentMaintenanceBillsPage from "./pages/maintenanceBilling/ResidentMaintenanceBillsPage.tsx";
+import SecretaryAnalyticsPage from "./pages/secretary/SecretaryAnalyticsPage.tsx";
 
 function SecretaryDashboardRoute() {
   const { session } = useAuth();
@@ -201,6 +202,10 @@ const router = createBrowserRouter([
       {
         path: "notices",
         element: <SecretaryNoticesPage />,
+      },
+      {
+        path: "analytics",
+        element: <SecretaryAnalyticsPage />,
       },
     ],
   },

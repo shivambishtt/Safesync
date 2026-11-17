@@ -104,6 +104,8 @@ const maintenanceBillSchema = new mongoose.Schema<IMaintenanceBill>(
 maintenanceBillSchema.index({ flat: 1, periodStart: 1 }, { unique: true });
 maintenanceBillSchema.index({ society: 1, status: 1, dueDate: 1 });
 maintenanceBillSchema.index({ resident: 1, periodStart: -1 });
+maintenanceBillSchema.index({ society: 1, createdAt: -1 });
+maintenanceBillSchema.index({ society: 1, paidAt: -1 });
 
 export const MaintenancePlan = mongoose.model<IMaintenancePlan>(
   "MaintenancePlan",

@@ -14,6 +14,7 @@ import {
   CalendarCheck,
   Store,
   Wallet,
+  BarChart3,
 } from "lucide-react";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -34,6 +35,7 @@ const navigation = {
     { name: "Complaints", path: "/secretary/complaints", icon: ClipboardList },
     { name: "Visitors", path: "/secretary/visitors", icon: UserRoundCheck },
     { name: "Notice Board", path: "/secretary/notices", icon: Megaphone },
+    { name: "Society Analytics", path: "/secretary/analytics", icon: BarChart3 },
     { name: "Profile", path: "/profile", icon: UserRound },
   ],
 

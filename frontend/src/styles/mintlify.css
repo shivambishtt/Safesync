@@ -857,3 +857,46 @@ body {
     padding: 24px;
   }
 }
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .analytics-print-root,
+  .analytics-print-root * {
+    visibility: visible !important;
+  }
+
+  .analytics-print-root {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    color: #08090a;
+  }
+
+  .analytics-print-hide {
+    display: none !important;
+  }
+
+  .analytics-print-root section,
+  .analytics-print-root article {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  .analytics-print-root > div > section {
+    margin-bottom: 14px;
+  }
+}

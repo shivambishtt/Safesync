@@ -16,6 +16,7 @@ import {
   propertyListingRouter,
   maintenanceBillingRouter,
 } from "./routes/user.routes";
+import analyticsRouter from "./routes/analytics.routes";
 
 const app: Application = express();
 
@@ -38,6 +39,7 @@ app.use("/api/v1/", complaintRouter);
 app.use("/api/v1/", noticeRouter);
 app.use("/api/v1/", propertyListingRouter);
 app.use("/api/v1/", maintenanceBillingRouter);
+app.use("/api/v1/", analyticsRouter);
 app.use("/api/v1/", visitorRouter);
 app.use("/api/v1/", securityRouter);
 
